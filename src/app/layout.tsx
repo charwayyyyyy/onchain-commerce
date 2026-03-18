@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   description: "Secure, transparent, and trust-centered commerce powered by blockchain escrow.",
 };
 
+import { Navbar } from "@/components/shared/navbar";
+import { Footer } from "@/components/shared/footer";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,9 +32,13 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
         >
-          {children}
+          <Navbar />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
           <Toaster position="top-center" richColors />
         </body>
       </html>
