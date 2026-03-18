@@ -8,7 +8,8 @@ import {
   MessageSquare,
   ShieldCheck,
   CreditCard,
-  LogOut
+  LogOut,
+  Store
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,15 +17,17 @@ import { Button } from "@/components/ui/button";
 interface DashboardSidebarProps {
   role: "buyer" | "seller";
   activeTab: string;
+  isMobile?: boolean;
 }
 
-export function DashboardSidebar({ role, activeTab }: DashboardSidebarProps) {
+export function DashboardSidebar({ role, activeTab, isMobile }: DashboardSidebarProps) {
   const buyerLinks = [
     { name: "Overview", icon: <LayoutDashboard size={20} />, href: "/dashboard/buyer" },
     { name: "My Orders", icon: <ShoppingBag size={20} />, href: "/dashboard/orders" },
     { name: "Wishlist", icon: <Heart size={20} />, href: "/dashboard/wishlist" },
     { name: "Disputes", icon: <ShieldCheck size={20} />, href: "/dashboard/disputes" },
     { name: "Settings", icon: <Settings size={20} />, href: "/dashboard/profile" },
+    { name: "Start Selling", icon: <Store size={20} />, href: "/dashboard/seller/onboarding" },
   ];
 
   const sellerLinks = [
@@ -39,7 +42,10 @@ export function DashboardSidebar({ role, activeTab }: DashboardSidebarProps) {
   const links = role === "seller" ? sellerLinks : buyerLinks;
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r bg-card/50 md:flex">
+    <aside className={cn(
+      "flex-col border-r bg-card/50",
+      isMobile ? "flex h-full w-full border-r-0" : "hidden w-64 shrink-0 md:flex"
+    )}>
       <div className="flex flex-1 flex-col gap-4 p-6">
         <div className="mb-8 flex flex-col gap-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

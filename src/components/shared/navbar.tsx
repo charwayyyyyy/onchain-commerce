@@ -7,11 +7,18 @@ import {
   UserButton, 
   useAuth
 } from "@clerk/nextjs";
-import { ShoppingCart, Search, Menu, ShieldCheck } from "lucide-react";
+import { ShoppingCart, Search, Menu, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export function Navbar() {
   const { isSignedIn } = useAuth();
+
+  const navLinks = [
+    { name: "Marketplace", href: "/marketplace" },
+    { name: "How it Works", href: "/how-it-works" },
+    { name: "FAQ", href: "/faq" },
+  ];
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
@@ -25,20 +32,16 @@ export function Navbar() {
           </Link>
           
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/marketplace" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Marketplace
-            </Link>
-            <Link href="/how-it-works" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              How it Works
-            </Link>
-            <Link href="/faq" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              FAQ
-            </Link>
+            {navLinks.map((link) => (
+              <Link key={link.href} href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                {link.name}
+              </Link>
+            ))}
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden relative md:block">
+          <div className="hidden relative lg:block">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <input
               type="search"
@@ -56,7 +59,7 @@ export function Navbar() {
             </Button>
           </Link>
 
-          <div className="flex items-center gap-2 border-l pl-4">
+          <div className="hidden md:flex items-center gap-2 border-l pl-4">
             {!isSignedIn ? (
               <>
                 <SignInButton mode="modal">
@@ -82,9 +85,50 @@ export function Navbar() {
             )}
           </div>
 
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          <Sheet>
+            <SheetTrigger>
+              <Menu className="h-5 w-5 md:hidden" />
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <SheetHeader>
+                <SheetTitle className="text-left flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <ShieldCheck size={20} />
+                  </div>
+                  TrustBay
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-4 mt-8">
+                {navLinks.map((link) => (
+                  <Link key={link.href} href={link.href} className="text-lg font-semibold border-b pb-2">
+                    {link.name}
+                  </Link>
+                ))}
+                <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
+                  {!isSignedIn ? (
+                    <>
+                      <SignInButton mode="modal">
+                        <Button variant="outline" className="w-full justify-start h-12 text-base">Sign In</Button>
+                      </SignInButton>
+                      <SignUpButton mode="modal">
+                        <Button className="w-full justify-start h-12 text-base">Get Started</Button>
+                      </SignUpButton>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/dashboard">
+                        <Button variant="outline" className="w-full justify-start h-12 text-base">Dashboard</Button>
+                      </Link>
+                      <div className="flex items-center gap-3 p-2">
+                        <UserButton />
+                        <span className="text-sm font-medium">Account Settings</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>

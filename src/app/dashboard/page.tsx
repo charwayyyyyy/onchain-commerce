@@ -1,28 +1,11 @@
-import { auth } from "@clerk/nextjs/server";
+import { getOrCreateUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import prisma from "@/lib/prisma";
 
 export default async function DashboardEntryPage() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    redirect("/sign-in");
-  }
-
-  let userProfile = null;
-  if (prisma && process.env.DATABASE_URL) {
-    try {
-      userProfile = await prisma.userProfile.findUnique({
-        where: { clerkUserId: userId },
-      });
-    } catch (e) {
-      console.error("Prisma error during build/runtime:", e);
-    }
-  }
+  const userProfile = await getOrCreateUser();
 
   if (!userProfile) {
-    // Initial redirect for new users to complete profile or just default to buyer
-    redirect("/dashboard/buyer");
+    redirect("/sign-in");
   }
 
   if (userProfile.role === "SELLER") {

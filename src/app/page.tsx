@@ -21,8 +21,13 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getMarketplaceProducts } from "@/actions/products";
+import { Star, ShoppingBag } from "lucide-react";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const products = await getMarketplaceProducts();
+  const featuredProducts = products.slice(0, 4);
+
   return (
     <div className="flex flex-col gap-16 py-12 md:gap-24 md:py-24">
       {/* Hero Section */}
@@ -133,6 +138,59 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Featured Products */}
+      {featuredProducts.length > 0 && (
+        <section className="container mx-auto px-4">
+          <div className="mb-12 flex items-end justify-between">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tight">Featured Listings</h2>
+              <p className="text-muted-foreground">Premium products from our most trusted sellers.</p>
+            </div>
+            <Link href="/marketplace">
+              <Button variant="outline" className="rounded-xl border-2 font-bold">View Marketplace</Button>
+            </Link>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {featuredProducts.map((product) => (
+              <Link key={product.id} href={`/marketplace/${product.id}`}>
+                <Card className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-2xl bg-card">
+                  <div className="relative aspect-square overflow-hidden bg-muted">
+                    {product.images?.[0] ? (
+                      <img
+                        src={product.images[0].url}
+                        alt={product.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-muted-foreground/30">
+                        <ShoppingBag size={48} />
+                      </div>
+                    )}
+                    <Badge className="absolute left-3 top-3 bg-background/90 text-foreground backdrop-blur-md border-none px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+                      {product.category?.name}
+                    </Badge>
+                  </div>
+                  <CardContent className="p-5">
+                    <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                      <span>{product.sellerProfile.storeName}</span>
+                      <div className="flex items-center gap-1 text-amber-500">
+                        <Star className="h-3 w-3 fill-current" />
+                        <span>{product.sellerProfile.ratingAverage}</span>
+                      </div>
+                    </div>
+                    <h3 className="mb-1 font-bold line-clamp-1 group-hover:text-primary transition-colors">{product.title}</h3>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xl font-extrabold">${product.price.toLocaleString()}</span>
+                      <span className="text-xs font-bold text-primary uppercase">{product.paymentToken}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Featured Categories */}
       <section className="container mx-auto px-4">
