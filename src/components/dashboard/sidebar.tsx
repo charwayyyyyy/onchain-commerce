@@ -26,7 +26,7 @@ export function DashboardSidebar({ role, activeTab, isMobile }: DashboardSidebar
     { name: "My Orders", icon: <ShoppingBag size={20} />, href: "/dashboard/orders" },
     { name: "Wishlist", icon: <Heart size={20} />, href: "/dashboard/wishlist" },
     { name: "Disputes", icon: <ShieldCheck size={20} />, href: "/dashboard/disputes" },
-    { name: "Settings", icon: <Settings size={20} />, href: "/dashboard/profile" },
+    { name: "Settings", icon: <Settings size={20} />, href: "/dashboard/settings" },
     { name: "Start Selling", icon: <Store size={20} />, href: "/dashboard/seller/onboarding" },
   ];
 
@@ -36,7 +36,7 @@ export function DashboardSidebar({ role, activeTab, isMobile }: DashboardSidebar
     { name: "Sales Orders", icon: <ShoppingBag size={20} />, href: "/dashboard/orders" },
     { name: "Wallet & Payouts", icon: <CreditCard size={20} />, href: "/dashboard/wallet" },
     { name: "Disputes", icon: <ShieldCheck size={20} />, href: "/dashboard/disputes" },
-    { name: "Store Settings", icon: <Settings size={20} />, href: "/dashboard/profile" },
+    { name: "Store Settings", icon: <Settings size={20} />, href: "/dashboard/settings" },
   ];
 
   const links = role === "seller" ? sellerLinks : buyerLinks;

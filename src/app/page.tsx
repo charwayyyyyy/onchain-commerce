@@ -49,7 +49,7 @@ export default async function LandingPage() {
                 Explore Marketplace <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/seller-onboarding">
+            <Link href="/dashboard/seller/onboarding">
               <Button size="lg" variant="outline" className="h-12 px-8 text-base">
                 Start Selling
               </Button>

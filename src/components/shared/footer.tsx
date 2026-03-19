@@ -37,9 +37,9 @@ export function Footer() {
           <h4 className="mb-6 text-sm font-semibold uppercase tracking-wider">Marketplace</h4>
           <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
             <li><Link href="/marketplace" className="hover:text-foreground transition-colors">Browse Products</Link></li>
-            <li><Link href="/categories" className="hover:text-foreground transition-colors">Categories</Link></li>
-            <li><Link href="/seller-onboarding" className="hover:text-foreground transition-colors">Become a Seller</Link></li>
-            <li><Link href="/featured" className="hover:text-foreground transition-colors">Featured Listings</Link></li>
+            <li><Link href="/marketplace?filter=categories" className="hover:text-foreground transition-colors">Categories</Link></li>
+            <li><Link href="/dashboard/seller/onboarding" className="hover:text-foreground transition-colors">Become a Seller</Link></li>
+            <li><Link href="/marketplace?filter=featured" className="hover:text-foreground transition-colors">Featured Listings</Link></li>
           </ul>
         </div>
 
@@ -47,9 +47,9 @@ export function Footer() {
           <h4 className="mb-6 text-sm font-semibold uppercase tracking-wider">Platform</h4>
           <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
             <li><Link href="/how-it-works" className="hover:text-foreground transition-colors">How it Works</Link></li>
-            <li><Link href="/escrow" className="hover:text-foreground transition-colors">Escrow Protection</Link></li>
-            <li><Link href="/disputes" className="hover:text-foreground transition-colors">Dispute Resolution</Link></li>
-            <li><Link href="/fees" className="hover:text-foreground transition-colors">Fees & Pricing</Link></li>
+            <li><Link href="/how-it-works#escrow" className="hover:text-foreground transition-colors">Escrow Protection</Link></li>
+            <li><Link href="/dashboard/disputes" className="hover:text-foreground transition-colors">Dispute Resolution</Link></li>
+            <li><Link href="/how-it-works#fees" className="hover:text-foreground transition-colors">Fees & Pricing</Link></li>
           </ul>
         </div>
 
@@ -57,7 +57,7 @@ export function Footer() {
           <h4 className="mb-6 text-sm font-semibold uppercase tracking-wider">Resources</h4>
           <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
             <li><Link href="/faq" className="hover:text-foreground transition-colors">Frequently Asked Questions</Link></li>
-            <li><Link href="/docs" className="hover:text-foreground transition-colors">Developer Docs</Link></li>
+            <li><Link href="https://docs.trustbay.io" className="hover:text-foreground transition-colors">Developer Docs</Link></li>
             <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
             <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
           </ul>
