@@ -97,3 +97,38 @@ export async function requireSeller() {
 
   return user;
 }
+
+/**
+ * Verifies if the current user owns a specific resource.
+ * Returns the user profile if ownership is verified.
+ */
+export async function requireOwnership(resourceSellerProfileId: string) {
+  const user = await requireSeller();
+
+  if (user.sellerProfile?.id !== resourceSellerProfileId) {
+    throw new Error("Forbidden: You do not own this resource.");
+  }
+
+  return user;
+}
+
+/**
+ * Checks if a user is signed in and has a profile.
+ * Redirects to sign-in if not.
+ */
+export async function protectRoute() {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    const { redirectToSignIn } = await auth();
+    return redirectToSignIn();
+  }
+
+  const user = await getOrCreateUser();
+  if (!user) {
+    const { redirectToSignIn } = await auth();
+    return redirectToSignIn();
+  }
+
+  return user;
+}

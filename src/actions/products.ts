@@ -60,17 +60,96 @@ export async function updateProduct(productId: string, formData: Partial<Product
     throw new Error("Forbidden: You do not have permission to update this product.");
   }
 
+  // If title is changing, we might want to update slug, but usually it's better to keep it stable
+  // For now, let's just update the fields provided
+  
   // Update the product
   const product = await prisma.product.update({
     where: { id: productId },
     data: {
       ...formData,
-      // Status remains published or draft depending on original logic
     },
   });
 
   revalidatePath(`/marketplace/${product.id}`);
   revalidatePath("/dashboard/seller");
+  revalidatePath("/dashboard/products");
+  revalidatePath(`/marketplace/product/${product.slug}`);
+
+  return product;
+}
+
+/**
+ * Deactivates a product (sets status to SOLD_OUT or similar, or just DRAFT).
+ */
+export async function deactivateProduct(productId: string) {
+  const user = await requireSeller();
+
+  const existingProduct = await prisma.product.findUnique({
+    where: { id: productId },
+  });
+
+  if (!existingProduct || existingProduct.sellerProfileId !== user.sellerProfile!.id) {
+    throw new Error("Forbidden: You do not have permission to update this product.");
+  }
+
+  const product = await prisma.product.update({
+    where: { id: productId },
+    data: { status: "DRAFT" },
+  });
+
+  revalidatePath("/marketplace");
+  revalidatePath("/dashboard/products");
+
+  return product;
+}
+
+/**
+ * Archives a product (sets status to ARCHIVED).
+ */
+export async function archiveProduct(productId: string) {
+  const user = await requireSeller();
+
+  const existingProduct = await prisma.product.findUnique({
+    where: { id: productId },
+  });
+
+  if (!existingProduct || existingProduct.sellerProfileId !== user.sellerProfile!.id) {
+    throw new Error("Forbidden: You do not have permission to archive this product.");
+  }
+
+  const product = await prisma.product.update({
+    where: { id: productId },
+    data: { status: "ARCHIVED" },
+  });
+
+  revalidatePath("/marketplace");
+  revalidatePath("/dashboard/seller");
+  revalidatePath("/dashboard/products");
+
+  return product;
+}
+
+/**
+ * Updates stock levels for a product.
+ */
+export async function updateStock(productId: string, newStock: number) {
+  const user = await requireSeller();
+
+  const existingProduct = await prisma.product.findUnique({
+    where: { id: productId },
+  });
+
+  if (!existingProduct || existingProduct.sellerProfileId !== user.sellerProfile!.id) {
+    throw new Error("Forbidden: You do not have permission to update stock for this product.");
+  }
+
+  const product = await prisma.product.update({
+    where: { id: productId },
+    data: { stock: newStock },
+  });
+
+  revalidatePath(`/marketplace/${productId}`);
   revalidatePath("/dashboard/products");
 
   return product;

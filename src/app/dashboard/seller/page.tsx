@@ -25,10 +25,10 @@ export default async function SellerDashboard() {
   const user = await getCurrentUserProfile();
 
   const stats = [
-    { label: "Pending Balance", value: `$${orders.filter(o => o.escrowStatus !== "RELEASED").reduce((acc, o) => acc + o.total, 0).toLocaleString()}`, icon: <Wallet className="h-4 w-4" /> },
-    { label: "Total Sales", value: orders.length.toString(), icon: <TrendingUp className="h-4 w-4" /> },
+    { label: "Pending Balance", value: `$${orders.filter(o => o.escrowStatus !== "RELEASED" && o.status !== "CANCELLED").reduce((acc, o) => acc + o.total, 0).toLocaleString()}`, icon: <Wallet className="h-4 w-4" /> },
+    { label: "Total Sales", value: orders.filter(o => o.status === "COMPLETED").length.toString(), icon: <TrendingUp className="h-4 w-4" /> },
     { label: "Active Listings", value: products.filter(p => p.status === "PUBLISHED").length.toString(), icon: <Package className="h-4 w-4" /> },
-    { label: "Average Rating", value: user?.sellerProfile?.ratingAverage.toString() || "0", icon: <Star className="h-4 w-4" /> },
+    { label: "Low Stock", value: products.filter(p => p.status === "PUBLISHED" && p.stock <= 5).length.toString(), icon: <AlertCircle className="h-4 w-4 text-orange-500" /> },
   ];
 
   return (
