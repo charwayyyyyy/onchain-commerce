@@ -92,11 +92,17 @@ export function Navbar() {
           </div>
 
           {mounted && (
-            <Sheet>
-              <SheetTrigger>
-                <Menu className="h-5 w-5 md:hidden" />
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger
+                  render={
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-5 w-5" />
+                      <span className="sr-only">Toggle menu</span>
+                    </Button>
+                  }
+                />
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <SheetHeader>
                   <SheetTitle className="text-left flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -136,6 +142,7 @@ export function Navbar() {
                 </div>
               </SheetContent>
             </Sheet>
+          </div>
           )}
         </div>
       </div>
