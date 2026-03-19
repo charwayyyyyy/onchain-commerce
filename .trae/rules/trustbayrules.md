@@ -231,3 +231,10 @@ When implementing:
 
 FINAL PRINCIPLE:
 TrustBay should behave like a real product, not a demo. Every exposed feature must either work properly, be truthfully simplified, or be removed from the visible UI until it is ready.
+
+Before finishing any UI edit, verify JSX structure integrity:
+- all tags are closed
+- all conditional blocks are balanced
+- no nested button or invalid DOM structure
+- no duplicated wrappers left by search/replace
+- run a build check after edits to navbar, layout, sidebar, sheet, dialog, or form components

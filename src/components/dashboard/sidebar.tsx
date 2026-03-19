@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { 
+  SignOutButton
+} from "@clerk/nextjs";
 
 interface DashboardSidebarProps {
   role: "buyer" | "seller";
@@ -72,10 +75,12 @@ export function DashboardSidebar({ role, activeTab, isMobile }: DashboardSidebar
       </div>
 
       <div className="mt-auto border-t p-6">
-        <Button variant="ghost" className="w-full justify-start gap-3 rounded-xl text-destructive hover:bg-destructive/10 transition-all">
-          <LogOut size={20} />
-          Sign Out
-        </Button>
+        <SignOutButton>
+          <Button variant="ghost" className="w-full justify-start gap-3 rounded-xl text-destructive hover:bg-destructive/10 transition-all">
+            <LogOut size={20} />
+            Sign Out
+          </Button>
+        </SignOutButton>
       </div>
     </aside>
   );

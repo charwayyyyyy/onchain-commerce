@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Save, User, Loader2 } from "lucide-react";
+import { Save, User, Loader2, Upload, X } from "lucide-react";
 import { UserProfile } from "@prisma/client";
 
 interface ProfileSettingsFormProps {
@@ -46,6 +46,23 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
     }
   }
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 800 * 1024) {
+      toast.error("File size must be less than 800KB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      form.setValue("avatarUrl", base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <Card className="border-none shadow-xl shadow-muted/50 rounded-[2.5rem] overflow-hidden">
       <CardHeader className="bg-muted/30 px-8 py-10">
@@ -54,31 +71,58 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
       </CardHeader>
       <CardContent className="p-8">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="flex items-center gap-8">
+          <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="relative group">
               {form.watch("avatarUrl") ? (
                 <img 
                   src={form.watch("avatarUrl")!} 
                   alt="Avatar" 
-                  className="h-24 w-24 rounded-[2rem] object-cover border-2 border-muted"
+                  className="h-32 w-32 rounded-[2.5rem] object-cover border-4 border-background shadow-xl"
                 />
               ) : (
-                <div className="h-24 w-24 rounded-[2rem] bg-muted flex items-center justify-center">
-                  <User size={40} className="text-muted-foreground/30" />
+                <div className="h-32 w-32 rounded-[2.5rem] bg-muted flex items-center justify-center border-4 border-background shadow-xl">
+                  <User size={48} className="text-muted-foreground/30" />
                 </div>
               )}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer bg-black/20 rounded-[2rem]">
-                <span className="text-[10px] font-black uppercase tracking-widest text-white">Change URL</span>
-              </div>
+              <label 
+                htmlFor="avatar-upload"
+                className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer bg-black/40 rounded-[2.5rem] text-white"
+              >
+                <Upload size={24} className="mb-1" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Upload</span>
+                <input 
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </label>
+              {form.watch("avatarUrl") && (
+                <button
+                  type="button"
+                  onClick={() => form.setValue("avatarUrl", "")}
+                  className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
-            <div className="space-y-1 flex-1">
-              <h3 className="font-bold text-lg leading-none">Profile Picture</h3>
-              <p className="text-sm text-muted-foreground font-medium mb-2">Provide a URL for your avatar image.</p>
-              <Input 
-                {...form.register("avatarUrl")} 
-                placeholder="https://example.com/avatar.jpg"
-                className="h-10 rounded-xl border-2 border-muted bg-background font-medium focus:border-primary focus:ring-0"
-              />
+            <div className="space-y-1 flex-1 text-center md:text-left">
+              <h3 className="font-bold text-xl leading-none">Profile Picture</h3>
+              <p className="text-sm text-muted-foreground font-medium mb-4">
+                Upload a picture from your device or provide a URL below.
+              </p>
+              <div className="flex flex-col gap-3">
+                <Input 
+                  {...form.register("avatarUrl")} 
+                  placeholder="Or enter image URL: https://example.com/avatar.jpg"
+                  className="h-10 rounded-xl border-2 border-muted bg-background font-medium focus:border-primary focus:ring-0"
+                />
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                  JPG, PNG or GIF. Max 800KB.
+                </p>
+              </div>
               {form.formState.errors.avatarUrl && (
                 <p className="text-xs text-destructive font-bold mt-1">{form.formState.errors.avatarUrl.message}</p>
               )}

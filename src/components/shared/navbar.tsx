@@ -91,8 +91,8 @@ export function Navbar() {
             )}
           </div>
 
-          {mounted && (
-            <div className="md:hidden">
+          <div className="md:hidden">
+            {mounted && (
               <Sheet>
                 <SheetTrigger
                   render={
@@ -103,47 +103,47 @@ export function Navbar() {
                   }
                 />
                 <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <SheetHeader>
-                  <SheetTitle className="text-left flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                      <ShieldCheck size={20} />
+                  <SheetHeader>
+                    <SheetTitle className="text-left flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                        <ShieldCheck size={20} />
+                      </div>
+                      TrustBay
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-4 mt-8">
+                    {navLinks.map((link) => (
+                      <Link key={link.href} href={link.href} className="text-lg font-semibold border-b pb-2">
+                        {link.name}
+                      </Link>
+                    ))}
+                    <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
+                      {!isSignedIn ? (
+                        <>
+                          <SignInButton mode="modal">
+                            <Button variant="outline" className="w-full justify-start h-12 text-base">Sign In</Button>
+                          </SignInButton>
+                          <SignUpButton mode="modal">
+                            <Button className="w-full justify-start h-12 text-base">Get Started</Button>
+                          </SignUpButton>
+                        </>
+                      ) : (
+                        <>
+                          <Link href="/dashboard">
+                            <Button variant="outline" className="w-full justify-start h-12 text-base">Dashboard</Button>
+                          </Link>
+                          <div className="flex items-center gap-3 p-2">
+                            <UserButton />
+                            <span className="text-sm font-medium">Account Settings</span>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    TrustBay
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-4 mt-8">
-                  {navLinks.map((link) => (
-                    <Link key={link.href} href={link.href} className="text-lg font-semibold border-b pb-2">
-                      {link.name}
-                    </Link>
-                  ))}
-                  <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
-                    {!isSignedIn ? (
-                      <>
-                        <SignInButton mode="modal">
-                          <Button variant="outline" className="w-full justify-start h-12 text-base">Sign In</Button>
-                        </SignInButton>
-                        <SignUpButton mode="modal">
-                          <Button className="w-full justify-start h-12 text-base">Get Started</Button>
-                        </SignUpButton>
-                      </>
-                    ) : (
-                      <>
-                        <Link href="/dashboard">
-                          <Button variant="outline" className="w-full justify-start h-12 text-base">Dashboard</Button>
-                        </Link>
-                        <div className="flex items-center gap-3 p-2">
-                          <UserButton />
-                          <span className="text-sm font-medium">Account Settings</span>
-                        </div>
-                      </>
-                    )}
                   </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetContent>
+              </Sheet>
+            )}
           </div>
-          )}
         </div>
       </div>
     </nav>
