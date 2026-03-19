@@ -1,7 +1,32 @@
 import { PrismaClient } from "@prisma/client";
 
+/**
+ * Prisma client singleton to prevent multiple instances in development.
+ * Explicitly handling DATABASE_URL from environment.
+ */
+
+const databaseUrl = process.env.DATABASE_URL;
+
 const prismaClientSingleton = () => {
-  return new PrismaClient();
+  if (!databaseUrl) {
+    console.error("CRITICAL: DATABASE_URL is not defined in environment variables.");
+    return null;
+  }
+  
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: databaseUrl,
+      },
+    },
+    // Enhanced logging for better debugging of connection issues
+    log: [
+      { level: 'query', emit: 'event' },
+      { level: 'error', emit: 'stdout' },
+      { level: 'info', emit: 'stdout' },
+      { level: 'warn', emit: 'stdout' },
+    ],
+  });
 };
 
 declare global {
@@ -9,6 +34,17 @@ declare global {
 }
 
 const prisma = globalThis.prisma ?? prismaClientSingleton();
+
+if (prisma) {
+  // @ts-ignore
+  prisma.$on('query', (e: any) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Query: ${e.query}`);
+      console.log(`Params: ${e.params}`);
+      console.log(`Duration: ${e.duration}ms`);
+    }
+  });
+}
 
 export default prisma;
 
