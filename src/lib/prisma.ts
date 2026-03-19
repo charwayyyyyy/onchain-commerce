@@ -9,8 +9,7 @@ const databaseUrl = process.env.DATABASE_URL;
 
 const prismaClientSingleton = () => {
   if (!databaseUrl) {
-    console.error("CRITICAL: DATABASE_URL is not defined in environment variables.");
-    return null;
+    throw new Error("CRITICAL: DATABASE_URL is not defined in environment variables.");
   }
   
   return new PrismaClient({
@@ -35,16 +34,14 @@ declare global {
 
 const prisma = globalThis.prisma ?? prismaClientSingleton();
 
-if (prisma) {
-  // @ts-ignore
-  prisma.$on('query', (e: any) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Query: ${e.query}`);
-      console.log(`Params: ${e.params}`);
-      console.log(`Duration: ${e.duration}ms`);
-    }
-  });
-}
+// @ts-ignore
+prisma.$on('query', (e: any) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Query: ${e.query}`);
+    console.log(`Params: ${e.params}`);
+    console.log(`Duration: ${e.duration}ms`);
+  }
+});
 
 export default prisma;
 
