@@ -56,7 +56,20 @@ model UserProfile {
   displayName   String?
   username      String?   @unique
   avatarUrl     String?
+  bio           String?
   role          UserRole  @default(BUYER)
+  
+  // Notification Preferences
+  notificationOrderUpdates    Boolean @default(true)
+  notificationDisputeUpdates  Boolean @default(true)
+  notificationSellerActivity  Boolean @default(true)
+  notificationMarketing       Boolean @default(false)
+  notificationSecurity        Boolean @default(true)
+  
+  // Preferences
+  preferredLanguage           String  @default("en")
+  preferredCurrency           String  @default("USD")
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -79,6 +92,7 @@ model SellerProfile {
   ratingAverage       Float     @default(0)
   totalSales          Int       @default(0)
   payoutWalletAddress String?
+  preferredPayoutNetwork String? @default("POLYGON")
   bannerImage         String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
@@ -120,7 +134,6 @@ model Product {
 
   images            ProductImage[]
   orderItems        OrderItem[]
-  wishlistItems     WishlistItem[]
   cartItems         CartItem[]
   reviews           Review[]
 }
@@ -135,18 +148,12 @@ model ProductImage {
 }
 
 model Wishlist {
-  id            String         @id @default(auto()) @map("_id") @db.ObjectId
-  userProfileId String         @unique @db.ObjectId
-  userProfile   UserProfile    @relation(fields: [userProfileId], references: [id])
-  items         WishlistItem[]
-}
-
-model WishlistItem {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  wishlistId String   @db.ObjectId
-  wishlist   Wishlist @relation(fields: [wishlistId], references: [id])
-  productId  String   @db.ObjectId
-  product    Product  @relation(fields: [productId], references: [id])
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  userProfileId String    @unique @db.ObjectId
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id])
+  productIds    String[]  @db.ObjectId
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Cart {

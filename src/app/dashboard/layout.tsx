@@ -54,11 +54,14 @@ export default function DashboardLayout({
           <span className="text-lg font-bold tracking-tight">TrustBay</span>
         </Link>
         <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
+          <SheetTrigger
+            render={
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            }
+          />
           <SheetContent side="left" className="p-0 w-64 border-r-0">
             <DashboardSidebar role={role} activeTab="overview" isMobile />
           </SheetContent>

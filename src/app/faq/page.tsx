@@ -57,7 +57,7 @@ export default function FAQPage() {
       </div>
 
       <div className="mb-20">
-        <Accordion type="single" collapsible className="w-full space-y-4">
+        <Accordion className="w-full space-y-4">
           {faqs.map((faq, index) => (
             <AccordionItem key={index} value={`item-${index}`} className="border-none bg-card/50 rounded-3xl px-8 shadow-sm">
               <AccordionTrigger className="text-left font-bold text-lg py-6 hover:no-underline hover:text-primary transition-colors">

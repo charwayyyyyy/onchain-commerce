@@ -60,9 +60,6 @@ export async function updateProduct(productId: string, formData: Partial<Product
     throw new Error("Forbidden: You do not have permission to update this product.");
   }
 
-  // If title is changing, we might want to update slug, but usually it's better to keep it stable
-  // For now, let's just update the fields provided
-  
   // Update the product
   const product = await prisma.product.update({
     where: { id: productId },
@@ -80,7 +77,7 @@ export async function updateProduct(productId: string, formData: Partial<Product
 }
 
 /**
- * Deactivates a product (sets status to SOLD_OUT or similar, or just DRAFT).
+ * Deactivates a product (sets status to DRAFT).
  */
 export async function deactivateProduct(productId: string) {
   const user = await requireSeller();
@@ -206,5 +203,77 @@ export async function getSellerProducts() {
       images: true,
     },
     orderBy: { createdAt: "desc" },
+  });
+}
+
+/**
+ * Adds a product to the user's wishlist.
+ */
+export async function addToWishlist(productId: string) {
+  const user = await requireUser();
+
+  const wishlist = await prisma.wishlist.upsert({
+    where: { userProfileId: user.id },
+    update: {
+      productIds: {
+        push: productId,
+      },
+    },
+    create: {
+      userProfileId: user.id,
+      productIds: [productId],
+    },
+  });
+
+  revalidatePath("/dashboard/wishlist");
+  return wishlist;
+}
+
+/**
+ * Removes a product from the user's wishlist.
+ */
+export async function removeFromWishlist(productId: string) {
+  const user = await requireUser();
+
+  const wishlist = await prisma.wishlist.findUnique({
+    where: { userProfileId: user.id },
+  });
+
+  if (!wishlist) return null;
+
+  const updatedWishlist = await prisma.wishlist.update({
+    where: { userProfileId: user.id },
+    data: {
+      productIds: {
+        set: wishlist.productIds.filter((id) => id !== productId),
+      },
+    },
+  });
+
+  revalidatePath("/dashboard/wishlist");
+  return updatedWishlist;
+}
+
+/**
+ * Fetches all products in the user's wishlist.
+ */
+export async function getWishlistProducts() {
+  const user = await requireUser();
+
+  const wishlist = await prisma.wishlist.findUnique({
+    where: { userProfileId: user.id },
+  });
+
+  if (!wishlist || wishlist.productIds.length === 0) return [];
+
+  return await prisma.product.findMany({
+    where: {
+      id: { in: wishlist.productIds },
+      status: "PUBLISHED",
+    },
+    include: {
+      images: true,
+      sellerProfile: true,
+    },
   });
 }
