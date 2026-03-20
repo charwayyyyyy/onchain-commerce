@@ -212,6 +212,24 @@ export async function getSellerProducts() {
 export async function addToWishlist(productId: string) {
   const user = await requireUser();
 
+  // Rule: Product must exist and be published to be added to wishlist
+  const product = await prisma.product.findUnique({
+    where: { id: productId, status: "PUBLISHED" },
+  });
+
+  if (!product) {
+    throw new Error("Product not found or no longer available.");
+  }
+
+  const existingWishlist = await prisma.wishlist.findUnique({
+    where: { userProfileId: user.id },
+  });
+
+  // Rule: Prevent duplicates
+  if (existingWishlist?.productIds.includes(productId)) {
+    return existingWishlist;
+  }
+
   const wishlist = await prisma.wishlist.upsert({
     where: { userProfileId: user.id },
     update: {

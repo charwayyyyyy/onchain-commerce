@@ -138,7 +138,14 @@ export async function markOrderPaid(orderId: string, txHash?: string) {
   });
 
   if (!order) throw new Error("Order not found");
-  if (order.status !== "CREATED") throw new Error("Order is not in a payable state");
+  
+  // Rule: Only the buyer of the order can initiate payment marking (in this simulated flow)
+  if (order.buyerProfileId !== user.id) throw new Error("Unauthorized: Only the buyer can pay for this order");
+  
+  // Rule: Order must be in CREATED state to move to PAID
+  if (order.status !== "CREATED") {
+    throw new Error(`Invalid transition: Cannot pay for an order in ${order.status} state`);
+  }
 
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
@@ -150,6 +157,8 @@ export async function markOrderPaid(orderId: string, txHash?: string) {
   });
 
   revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/seller");
   return updatedOrder;
 }
 
@@ -160,13 +169,21 @@ export async function markOrderPaid(orderId: string, txHash?: string) {
 export async function markOrderShipped(orderId: string, shipmentReference: string) {
   const user = await requireSeller();
 
+  if (!shipmentReference || shipmentReference.trim().length < 3) {
+    throw new Error("Invalid shipment reference: Please provide a valid tracking number or reference.");
+  }
+
   const order = await prisma.order.findUnique({
     where: { id: orderId },
   });
 
   if (!order) throw new Error("Order not found");
-  if (order.sellerProfileId !== user.sellerProfile!.id) throw new Error("Not authorized");
-  if (order.status !== "PAID") throw new Error("Order must be paid before shipping");
+  if (order.sellerProfileId !== user.sellerProfile!.id) throw new Error("Unauthorized: Only the seller can mark this order as shipped");
+  
+  // Rule: Order must be PAID before it can be SHIPPED
+  if (order.status !== "PAID") {
+    throw new Error(`Invalid transition: Order must be PAID before shipping. Current status: ${order.status}`);
+  }
 
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
@@ -179,6 +196,8 @@ export async function markOrderShipped(orderId: string, shipmentReference: strin
   });
 
   revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/seller");
   return updatedOrder;
 }
 
@@ -194,8 +213,12 @@ export async function confirmDelivery(orderId: string) {
   });
 
   if (!order) throw new Error("Order not found");
-  if (order.buyerProfileId !== user.id) throw new Error("Not authorized");
-  if (order.status !== "SHIPPED") throw new Error("Order must be shipped before confirming delivery");
+  if (order.buyerProfileId !== user.id) throw new Error("Unauthorized: Only the buyer can confirm delivery");
+  
+  // Rule: Order must be SHIPPED before delivery can be confirmed
+  if (order.status !== "SHIPPED") {
+    throw new Error(`Invalid transition: Order must be SHIPPED before confirming delivery. Current status: ${order.status}`);
+  }
 
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
@@ -207,6 +230,8 @@ export async function confirmDelivery(orderId: string) {
   });
 
   revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/seller");
   return updatedOrder;
 }
 
@@ -222,7 +247,14 @@ export async function completeOrder(orderId: string) {
   });
 
   if (!order) throw new Error("Order not found");
-  if (order.status !== "DELIVERED") throw new Error("Order must be delivered before completion");
+  
+  // Rule: Only the buyer can finalize and release funds (or system timeout)
+  if (order.buyerProfileId !== user.id) throw new Error("Unauthorized: Only the buyer can finalize the order and release funds");
+
+  // Rule: Order must be DELIVERED before completion
+  if (order.status !== "DELIVERED") {
+    throw new Error(`Invalid transition: Order must be DELIVERED before completion. Current status: ${order.status}`);
+  }
 
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
@@ -240,6 +272,8 @@ export async function completeOrder(orderId: string) {
   });
 
   revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/seller");
   return updatedOrder;
 }
 
@@ -250,6 +284,10 @@ export async function completeOrder(orderId: string) {
 export async function cancelOrder(orderId: string, reason: string) {
   const user = await requireUser();
 
+  if (!reason || reason.trim().length < 5) {
+    throw new Error("Cancellation reason required: Please provide a brief explanation (min 5 chars).");
+  }
+
   const order = await prisma.order.findUnique({
     where: { id: orderId },
   });
@@ -259,11 +297,18 @@ export async function cancelOrder(orderId: string, reason: string) {
   const isBuyer = order.buyerProfileId === user.id;
   const isSeller = user.sellerProfile && order.sellerProfileId === user.sellerProfile.id;
 
-  if (!isBuyer && !isSeller) throw new Error("Not authorized");
+  if (!isBuyer && !isSeller) throw new Error("Unauthorized: You do not have permission to cancel this order");
 
   // Logic for cancellation eligibility
-  if (order.status === "SHIPPED" || order.status === "DELIVERED" || order.status === "COMPLETED") {
-    throw new Error("Order cannot be cancelled at this stage");
+  // Rule: Cannot cancel if already SHIPPED or further
+  const uncancelableStatuses: OrderStatus[] = ["SHIPPED", "DELIVERED", "COMPLETED", "DISPUTED", "CANCELLED"];
+  if (uncancelableStatuses.includes(order.status)) {
+    throw new Error(`Order cannot be cancelled at this stage (${order.status}). If there is an issue, please open a dispute.`);
+  }
+
+  // Rule: Buyer can only cancel if not yet PAID (unless seller agrees, but keeping it simple for MVP)
+  if (isBuyer && order.status === "PAID") {
+    throw new Error("Cannot cancel a paid order. Please contact the seller or wait for shipping to open a dispute if needed.");
   }
 
   const updatedOrder = await prisma.order.update({
@@ -271,6 +316,7 @@ export async function cancelOrder(orderId: string, reason: string) {
     data: {
       status: "CANCELLED",
       escrowStatus: order.status === "PAID" ? "REFUNDED" : "NOT_STARTED",
+      // We could store the cancellation reason in a notes field if we had one
     },
   });
 
@@ -284,6 +330,8 @@ export async function cancelOrder(orderId: string, reason: string) {
   }
 
   revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/seller");
   return updatedOrder;
 }
 
@@ -329,4 +377,40 @@ export async function openDispute(orderId: string, reason: string, description: 
   revalidatePath("/dashboard/disputes");
   
   return dispute;
+}
+
+/**
+ * Fetches all disputes for the current authenticated user (as buyer or seller).
+ */
+export async function getUserDisputes() {
+  const user = await requireUser();
+
+  const where: any = {
+    OR: [
+      { openedByProfileId: user.id },
+      { order: { sellerProfileId: user.sellerProfile?.id } }
+    ]
+  };
+
+  // If sellerProfile doesn't exist, only fetch by buyerProfileId
+  if (!user.sellerProfile) {
+    delete where.OR[1].order;
+    where.openedByProfileId = user.id;
+    delete where.OR;
+  }
+
+  return await prisma.dispute.findMany({
+    where,
+    include: {
+      order: {
+        include: {
+          items: true,
+          sellerProfile: true,
+          buyerProfile: true,
+        }
+      },
+      openedByProfile: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
 }

@@ -56,7 +56,7 @@ export default function NewProductPage() {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -75,208 +75,297 @@ export default function NewProductPage() {
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
+    const toastId = toast.loading("Publishing your listing...");
     try {
       await createProduct(data);
-      toast.success("Product listed successfully!");
+      toast.success("Product listed successfully!", { id: toastId });
       router.push("/dashboard/seller");
+      router.refresh();
     } catch (error: any) {
-      toast.error(error.message || "Failed to list product.");
+      toast.error(error.message || "Failed to list product.", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 flex flex-col items-center">
-      <div className="max-w-3xl w-full flex flex-col gap-8">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Create New Listing</h1>
-          <p className="text-muted-foreground">Fill in the details to list your product on TrustBay.</p>
+    <div className="container mx-auto px-4 py-12 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="max-w-4xl w-full flex flex-col gap-10">
+        <div className="flex flex-col gap-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest w-fit">
+            <Package size={14} /> Marketplace Listing
+          </div>
+          <h1 className="text-4xl font-black tracking-tighter uppercase">Create New Listing</h1>
+          <p className="text-muted-foreground text-lg font-medium">Detailed listings attract more buyers and build trust.</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Card className="border-none shadow-lg shadow-muted/50 overflow-hidden">
-            <CardHeader className="bg-muted/30 pb-8 pt-8">
-              <CardTitle className="text-xl font-bold flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" /> Basic Information
-              </CardTitle>
-              <CardDescription>Tell buyers what you are selling.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-8">
-              <div className="space-y-2">
-                <Label htmlFor="title" className="font-bold">Product Title</Label>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-10 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-10">
+            <Card className="border-none shadow-2xl shadow-muted/50 overflow-hidden rounded-[2.5rem]">
+              <CardHeader className="bg-muted/30 pb-10 pt-10 px-10">
+                <CardTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                    <Tag className="h-5 w-5" />
+                  </div>
+                  Basic Information
+                </CardTitle>
+                <CardDescription className="text-sm font-medium">Essential details about your product.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-8 pt-10 px-10 pb-12">
+                <div className="space-y-3">
+                  <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Product Title</Label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
+                      <Tag className="h-5 w-5" />
+                    </div>
+                    <Input 
+                      id="title" 
+                      placeholder="e.g. iPhone 15 Pro - Titanium Blue" 
+                      className={cn(
+                        "pl-12 h-14 rounded-2xl border-2 bg-muted/20 focus:bg-background transition-all font-bold text-lg",
+                        errors.title ? "border-destructive/50 focus:border-destructive" : "border-transparent focus:border-primary"
+                      )}
+                      {...register("title")} 
+                    />
+                  </div>
+                  {errors.title && (
+                    <p className="text-xs font-bold text-destructive mt-1 flex items-center gap-1 ml-1 animate-in slide-in-from-left-2">
+                      <AlertCircle size={14} /> {errors.title.message as string}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="shortDescription" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 text-xs">Short Hook (Summary)</Label>
                   <Input 
-                    id="title" 
-                    placeholder="iPhone 15 Pro - Titanium Blue" 
-                    className="pl-10 rounded-xl"
-                    {...register("title")} 
+                    id="shortDescription" 
+                    placeholder="A catchy one-liner for search results..." 
+                    className={cn(
+                      "h-14 rounded-2xl border-2 bg-muted/20 focus:bg-background transition-all font-medium",
+                      errors.shortDescription ? "border-destructive/50 focus:border-destructive" : "border-transparent focus:border-primary"
+                    )}
+                    {...register("shortDescription")} 
                   />
-                </div>
-                {errors.title && (
-                  <p className="text-xs font-medium text-destructive mt-1">{errors.title.message as string}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="shortDescription" className="font-bold">Short Description</Label>
-                <Input 
-                  id="shortDescription" 
-                  placeholder="A quick summary of the product (max 200 chars)" 
-                  className="rounded-xl"
-                  {...register("shortDescription")} 
-                />
-                {errors.shortDescription && (
-                  <p className="text-xs font-medium text-destructive mt-1">{errors.shortDescription.message as string}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description" className="font-bold">Full Description</Label>
-                <Textarea 
-                  id="description" 
-                  placeholder="Detailed features, specs, and condition details..." 
-                  className="min-h-[150px] rounded-xl"
-                  {...register("description")} 
-                />
-                {errors.description && (
-                  <p className="text-xs font-medium text-destructive mt-1">{errors.description.message as string}</p>
-                )}
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="categoryId" className="font-bold">Category</Label>
-                  <Select onValueChange={(val) => setValue("categoryId", val as string)}>
-                    <SelectTrigger className="rounded-xl h-11">
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.categoryId && (
-                    <p className="text-xs font-medium text-destructive mt-1">{errors.categoryId.message as string}</p>
+                  {errors.shortDescription && (
+                    <p className="text-xs font-bold text-destructive mt-1 flex items-center gap-1 ml-1 animate-in slide-in-from-left-2">
+                      <AlertCircle size={14} /> {errors.shortDescription.message as string}
+                    </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="condition" className="font-bold">Condition</Label>
-                  <Select onValueChange={(val) => setValue("condition", val as any)} defaultValue="NEW">
-                    <SelectTrigger className="rounded-xl h-11">
-                      <SelectValue placeholder="Condition" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NEW">Brand New</SelectItem>
-                      <SelectItem value="LIKE_NEW">Like New</SelectItem>
-                      <SelectItem value="PRE_OWNED">Pre-owned</SelectItem>
-                      <SelectItem value="REFURBISHED">Refurbished</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
 
-            <CardHeader className="bg-muted/30 pb-8 pt-8 border-t">
-              <CardTitle className="text-xl font-bold flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-primary" /> Pricing & Inventory
-              </CardTitle>
-              <CardDescription>Set your price and stock levels.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-8">
-              <div className="grid gap-6 sm:grid-cols-3">
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="price" className="font-bold">Price (USD equivalent)</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="price" 
-                      type="number"
-                      step="0.01"
-                      placeholder="999.00" 
-                      className="pl-10 rounded-xl h-11"
-                      {...register("price")} 
-                    />
-                  </div>
-                  {errors.price && (
-                    <p className="text-xs font-medium text-destructive mt-1">{errors.price.message as string}</p>
+                <div className="space-y-3">
+                  <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 text-xs">Full Product Story</Label>
+                  <Textarea 
+                    id="description" 
+                    placeholder="Describe history, features, specs, and exact condition..." 
+                    className={cn(
+                      "min-h-[200px] rounded-2xl border-2 bg-muted/20 focus:bg-background transition-all font-medium resize-none p-5",
+                      errors.description ? "border-destructive/50 focus:border-destructive" : "border-transparent focus:border-primary"
+                    )}
+                    {...register("description")} 
+                  />
+                  {errors.description && (
+                    <p className="text-xs font-bold text-destructive mt-1 flex items-center gap-1 ml-1 animate-in slide-in-from-left-2">
+                      <AlertCircle size={14} /> {errors.description.message as string}
+                    </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="paymentToken" className="font-bold">Payment Token</Label>
-                  <Select onValueChange={(val) => setValue("paymentToken", val as any)} defaultValue="USDC">
-                    <SelectTrigger className="rounded-xl h-11">
-                      <SelectValue placeholder="Token" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USDC">USDC</SelectItem>
-                      <SelectItem value="ETH">ETH</SelectItem>
-                      <SelectItem value="USDT">USDT</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="stock" className="font-bold">Available Stock</Label>
-                  <div className="relative">
-                    <Box className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="stock" 
-                      type="number"
-                      placeholder="1" 
-                      className="pl-10 rounded-xl h-11"
-                      {...register("stock")} 
-                    />
+                <div className="grid gap-8 sm:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label htmlFor="categoryId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 text-xs">Category</Label>
+                    <Select onValueChange={(val) => setValue("categoryId", val as string)}>
+                      <SelectTrigger className={cn(
+                        "rounded-2xl h-14 border-2 bg-muted/20 focus:bg-background transition-all font-bold px-5",
+                        errors.categoryId ? "border-destructive/50 focus:border-destructive" : "border-transparent focus:border-primary"
+                      )}>
+                        <SelectValue placeholder="Pick a Category" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-2">
+                        {CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id} className="rounded-xl my-1 font-bold">{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.categoryId && (
+                      <p className="text-xs font-bold text-destructive mt-1 flex items-center gap-1 ml-1 animate-in slide-in-from-left-2">
+                        <AlertCircle size={14} /> {errors.categoryId.message as string}
+                      </p>
+                    )}
                   </div>
-                  {errors.stock && (
-                    <p className="text-xs font-medium text-destructive mt-1">{errors.stock.message as string}</p>
+                  <div className="space-y-3">
+                    <Label htmlFor="condition" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 text-xs">Item Condition</Label>
+                    <Select onValueChange={(val) => setValue("condition", val as any)} defaultValue="NEW">
+                      <SelectTrigger className="rounded-2xl h-14 border-2 bg-muted/20 focus:bg-background transition-all font-bold px-5 border-transparent focus:border-primary">
+                        <SelectValue placeholder="Condition" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-2">
+                        <SelectItem value="NEW" className="rounded-xl my-1 font-bold">Brand New</SelectItem>
+                        <SelectItem value="LIKE_NEW" className="rounded-xl my-1 font-bold">Like New</SelectItem>
+                        <SelectItem value="PRE_OWNED" className="rounded-xl my-1 font-bold">Pre-owned</SelectItem>
+                        <SelectItem value="REFURBISHED" className="rounded-xl my-1 font-bold">Refurbished</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-2xl shadow-muted/50 overflow-hidden rounded-[2.5rem]">
+              <CardHeader className="bg-muted/30 pb-10 pt-10 px-10">
+                <CardTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                    <DollarSign className="h-5 w-5" />
+                  </div>
+                  Value & Logistics
+                </CardTitle>
+                <CardDescription className="text-sm font-medium">Pricing, stock, and delivery estimates.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-8 pt-10 px-10 pb-12">
+                <div className="grid gap-8 sm:grid-cols-3">
+                  <div className="space-y-3 sm:col-span-2">
+                    <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Listing Price (USD Value)</Label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
+                        <DollarSign className="h-5 w-5" />
+                      </div>
+                      <Input 
+                        id="price" 
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00" 
+                        className={cn(
+                          "pl-12 h-14 rounded-2xl border-2 bg-muted/20 focus:bg-background transition-all font-black text-2xl tracking-tighter",
+                          errors.price ? "border-destructive/50 focus:border-destructive" : "border-transparent focus:border-primary"
+                        )}
+                        {...register("price", { valueAsNumber: true })} 
+                      />
+                    </div>
+                    {errors.price && (
+                      <p className="text-xs font-bold text-destructive mt-1 flex items-center gap-1 ml-1 animate-in slide-in-from-left-2">
+                        <AlertCircle size={14} /> {errors.price.message as string}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="paymentToken" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Payment Asset</Label>
+                    <Select onValueChange={(val) => setValue("paymentToken", val as any)} defaultValue="USDC">
+                      <SelectTrigger className="rounded-2xl h-14 border-2 bg-muted/20 focus:bg-background transition-all font-black px-5 border-transparent focus:border-primary">
+                        <SelectValue placeholder="Token" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-2">
+                        <SelectItem value="USDC" className="rounded-xl my-1 font-black">USDC</SelectItem>
+                        <SelectItem value="ETH" className="rounded-xl my-1 font-black">ETH</SelectItem>
+                        <SelectItem value="USDT" className="rounded-xl my-1 font-black">USDT</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid gap-8 sm:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label htmlFor="stock" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Inventory Quantity</Label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
+                        <Box className="h-5 w-5" />
+                      </div>
+                      <Input 
+                        id="stock" 
+                        type="number"
+                        placeholder="1" 
+                        className={cn(
+                          "pl-12 h-14 rounded-2xl border-2 bg-muted/20 focus:bg-background transition-all font-bold",
+                          errors.stock ? "border-destructive/50 focus:border-destructive" : "border-transparent focus:border-primary"
+                        )}
+                        {...register("stock", { valueAsNumber: true })} 
+                      />
+                    </div>
+                    {errors.stock && (
+                      <p className="text-xs font-bold text-destructive mt-1 flex items-center gap-1 ml-1 animate-in slide-in-from-left-2">
+                        <AlertCircle size={14} /> {errors.stock.message as string}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="deliveryEstimate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Est. Delivery Time</Label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
+                        <Truck className="h-5 w-5" />
+                      </div>
+                      <Input 
+                        id="deliveryEstimate" 
+                        placeholder="e.g. 3-7 Business Days" 
+                        className="pl-12 h-14 rounded-2xl border-2 bg-muted/20 focus:bg-background transition-all font-bold border-transparent focus:border-primary"
+                        {...register("deliveryEstimate")} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-8">
+            <Card className="border-none shadow-2xl shadow-muted/50 overflow-hidden rounded-[2.5rem] bg-primary text-primary-foreground sticky top-8">
+              <CardHeader className="bg-black/10 pb-8 pt-8 px-8">
+                <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5" /> Publish Listing
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-8 px-8 pb-10 space-y-6">
+                <div className="space-y-4">
+                  <div className="flex gap-3 items-start">
+                    <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">1</div>
+                    <p className="text-xs font-medium opacity-90 leading-relaxed">Your listing will be visible to all global buyers instantly.</p>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">2</div>
+                    <p className="text-xs font-medium opacity-90 leading-relaxed">Funds from sales are held in Escrow until buyer confirmation.</p>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">3</div>
+                    <p className="text-xs font-medium opacity-90 leading-relaxed">You can edit or archive your listing at any time from your dashboard.</p>
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full h-16 text-sm font-black uppercase tracking-widest shadow-2xl shadow-black/20 gap-3 bg-white text-primary hover:bg-white/90 rounded-2xl group transition-all active:scale-95 disabled:opacity-50"
+                  disabled={isSubmitting || !isDirty}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                      Go Live Now <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </>
                   )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryEstimate" className="font-bold">Delivery Estimate</Label>
-                  <div className="relative">
-                    <Truck className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="deliveryEstimate" 
-                      placeholder="3-7 Business Days" 
-                      className="pl-10 rounded-xl h-11"
-                      {...register("deliveryEstimate")} 
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-emerald-50 p-4 border border-emerald-100 flex gap-3">
-                <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0" />
-                <p className="text-xs text-emerald-700 leading-relaxed">
-                  <strong>TrustBay Escrow Active:</strong> Once published, buyers can purchase this item. Their funds will be held securely by our escrow contract until you fulfill the order and delivery is confirmed.
-                </p>
-              </div>
-            </CardContent>
-
-            <CardFooter className="bg-muted/30 py-8 px-8 border-t">
-              <Button 
-                type="submit" 
-                className="w-full h-14 text-base font-bold shadow-lg shadow-primary/20 gap-2"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Publishing Listing...
-                  </>
-                ) : (
-                  <>
-                    Publish Product <ArrowRight className="h-5 w-5" />
-                  </>
+                </Button>
+                
+                {!isDirty && (
+                  <p className="text-[10px] font-black uppercase tracking-widest text-center opacity-60">
+                    Fill in details to enable
+                  </p>
                 )}
-              </Button>
-            </CardFooter>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <div className="p-8 rounded-[2rem] bg-muted/30 border-2 border-dashed border-muted flex flex-col items-center text-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-background flex items-center justify-center text-muted-foreground">
+                <Info size={24} />
+              </div>
+              <div>
+                <h4 className="font-black text-[10px] uppercase tracking-widest mb-1">Need Help?</h4>
+                <p className="text-xs text-muted-foreground font-medium">Check our Seller Guide for tips on creating high-converting listings.</p>
+              </div>
+              <Link href="/how-it-works">
+                <Button variant="link" className="text-[10px] font-black uppercase tracking-widest p-0 h-auto">View Guide</Button>
+              </Link>
+            </div>
+          </div>
         </form>
       </div>
     </div>

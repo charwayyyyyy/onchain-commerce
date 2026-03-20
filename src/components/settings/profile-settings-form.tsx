@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Save, User, Loader2, Upload, X } from "lucide-react";
 import { UserProfile } from "@prisma/client";
@@ -32,15 +33,26 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
     },
   });
 
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isDirty },
+    reset
+  } = form;
+
   async function onSubmit(values: ProfileSettingsValues) {
     setIsLoading(true);
+    const toastId = toast.loading("Saving changes...");
     try {
       const result = await updateProfileSettings(values);
       if (result.success) {
-        toast.success("Profile updated successfully");
+        toast.success("Profile updated successfully", { id: toastId });
+        reset(values); // Reset dirty state with new values
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to update profile");
+      toast.error(error.message || "Failed to update profile", { id: toastId });
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +70,7 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      form.setValue("avatarUrl", base64String);
+      setValue("avatarUrl", base64String, { shouldDirty: true });
     };
     reader.readAsDataURL(file);
   };
@@ -66,16 +78,25 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
   return (
     <Card className="border-none shadow-xl shadow-muted/50 rounded-[2.5rem] overflow-hidden">
       <CardHeader className="bg-muted/30 px-8 py-10">
-        <CardTitle className="text-xl font-bold">Public Profile</CardTitle>
-        <CardDescription className="text-base font-medium">This information will be displayed publicly on the platform.</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-bold uppercase tracking-widest">Public Profile</CardTitle>
+            <CardDescription className="text-base font-medium">This information will be displayed publicly on the platform.</CardDescription>
+          </div>
+          {isDirty && (
+            <Badge variant="outline" className="animate-pulse bg-amber-500/10 text-amber-600 border-amber-500/20 font-black uppercase tracking-widest text-[10px] px-3 py-1 rounded-full">
+              Unsaved Changes
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="p-8">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="relative group">
-              {form.watch("avatarUrl") ? (
+              {watch("avatarUrl") ? (
                 <img 
-                  src={form.watch("avatarUrl")!} 
+                  src={watch("avatarUrl")!} 
                   alt="Avatar" 
                   className="h-32 w-32 rounded-[2.5rem] object-cover border-4 border-background shadow-xl"
                 />
@@ -98,10 +119,10 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
                   onChange={handleImageUpload}
                 />
               </label>
-              {form.watch("avatarUrl") && (
+              {watch("avatarUrl") && (
                 <button
                   type="button"
-                  onClick={() => form.setValue("avatarUrl", "")}
+                  onClick={() => setValue("avatarUrl", "", { shouldDirty: true })}
                   className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                 >
                   <X size={14} />
@@ -115,16 +136,16 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
               </p>
               <div className="flex flex-col gap-3">
                 <Input 
-                  {...form.register("avatarUrl")} 
+                  {...register("avatarUrl")} 
                   placeholder="Or enter image URL: https://example.com/avatar.jpg"
-                  className="h-10 rounded-xl border-2 border-muted bg-background font-medium focus:border-primary focus:ring-0"
+                  className="h-12 rounded-xl border-2 border-muted bg-background font-medium focus:border-primary focus:ring-0"
                 />
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest px-1">
                   JPG, PNG or GIF. Max 800KB.
                 </p>
               </div>
-              {form.formState.errors.avatarUrl && (
-                <p className="text-xs text-destructive font-bold mt-1">{form.formState.errors.avatarUrl.message}</p>
+              {errors.avatarUrl && (
+                <p className="text-xs text-destructive font-bold mt-1">{errors.avatarUrl.message}</p>
               )}
             </div>
           </div>
@@ -135,23 +156,23 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
             <div className="space-y-3">
               <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">Display Name</Label>
               <Input 
-                {...form.register("displayName")} 
+                {...register("displayName")} 
                 placeholder="Enter your name" 
                 className="h-12 rounded-xl border-2 border-muted bg-background font-bold focus:border-primary focus:ring-0 transition-colors" 
               />
-              {form.formState.errors.displayName && (
-                <p className="text-xs text-destructive font-bold">{form.formState.errors.displayName.message}</p>
+              {errors.displayName && (
+                <p className="text-xs text-destructive font-bold">{errors.displayName.message}</p>
               )}
             </div>
             <div className="space-y-3">
               <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">Username</Label>
               <Input 
-                {...form.register("username")} 
+                {...register("username")} 
                 placeholder="username" 
                 className="h-12 rounded-xl border-2 border-muted bg-background font-bold focus:border-primary focus:ring-0 transition-colors" 
               />
-              {form.formState.errors.username && (
-                <p className="text-xs text-destructive font-bold">{form.formState.errors.username.message}</p>
+              {errors.username && (
+                <p className="text-xs text-destructive font-bold">{errors.username.message}</p>
               )}
             </div>
             <div className="space-y-3 md:col-span-2">
@@ -161,17 +182,17 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
                 disabled 
                 className="h-12 rounded-xl border-2 border-muted bg-muted/50 font-bold opacity-70 cursor-not-allowed" 
               />
-              <p className="text-[10px] text-muted-foreground font-medium italic">Email updates are handled through your account security settings.</p>
+              <p className="text-[10px] text-muted-foreground font-medium italic px-1 leading-relaxed">Email updates and password changes are handled securely through your account security settings via Clerk.</p>
             </div>
             <div className="space-y-3 md:col-span-2">
               <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">Bio</Label>
               <Textarea 
-                {...form.register("bio")}
-                className="w-full p-4 rounded-xl border-2 border-muted bg-background font-medium focus:border-primary focus:ring-0 transition-colors resize-none h-32" 
+                {...register("bio")}
+                className="w-full p-5 rounded-xl border-2 border-muted bg-background font-medium focus:border-primary focus:ring-0 transition-colors resize-none h-32" 
                 placeholder="Tell us about yourself..." 
               />
-              {form.formState.errors.bio && (
-                <p className="text-xs text-destructive font-bold">{form.formState.errors.bio.message}</p>
+              {errors.bio && (
+                <p className="text-xs text-destructive font-bold">{errors.bio.message}</p>
               )}
             </div>
           </div>
@@ -179,11 +200,11 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
           <div className="flex justify-end pt-4">
             <Button 
               type="submit" 
-              disabled={isLoading}
-              className="gap-2 h-12 px-8 font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20"
+              disabled={isLoading || !isDirty}
+              className="gap-2 h-14 px-10 font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save Profile
+              {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+              {isDirty ? "Save Changes" : "Saved"}
             </Button>
           </div>
         </form>

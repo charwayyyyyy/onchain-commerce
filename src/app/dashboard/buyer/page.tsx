@@ -5,13 +5,15 @@ import {
   AlertCircle,
   Wallet,
   ShieldCheck,
-  Package
+  Package,
+  ArrowRight
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getBuyerOrders } from "@/actions/orders";
 import Link from "next/link";
+import { StatusBadge } from "@/components/shared/ux/status-badge";
+import { EmptyState } from "@/components/shared/ux/empty-state";
 
 export default async function BuyerDashboard() {
   const orders = await getBuyerOrders();
@@ -24,10 +26,19 @@ export default async function BuyerDashboard() {
   ];
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Buyer Overview</h1>
-        <p className="text-muted-foreground">Manage your purchases, tracking, and trust history.</p>
+    <div className="flex flex-col gap-8 pb-12">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Buyer Overview</h1>
+          <p className="text-muted-foreground">Manage your purchases, tracking, and trust history.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link href="/marketplace">
+            <Button variant="outline" className="rounded-2xl h-12 px-6 font-bold border-2">
+              Browse Marketplace
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -51,7 +62,10 @@ export default async function BuyerDashboard() {
       <Card className="border-none shadow-xl shadow-muted/50 overflow-hidden rounded-3xl">
         <CardHeader className="bg-muted/30 pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-black uppercase tracking-widest">Recent Orders</CardTitle>
+            <div>
+              <CardTitle className="text-lg font-black uppercase tracking-widest">Recent Orders</CardTitle>
+              <CardDescription className="text-xs font-medium">Your most recent purchases and their status</CardDescription>
+            </div>
             <Link href="/dashboard/orders">
               <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest hover:bg-primary/5">View All</Button>
             </Link>
@@ -60,7 +74,7 @@ export default async function BuyerDashboard() {
         <CardContent className="p-0">
           {orders.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-sm min-w-[800px]">
                 <thead className="border-b bg-muted/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   <tr>
                     <th className="px-6 py-4">Order ID</th>
@@ -77,7 +91,7 @@ export default async function BuyerDashboard() {
                       <td className="px-6 py-4 font-mono font-bold text-xs">#{order.id.slice(-8).toUpperCase()}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-muted overflow-hidden border border-muted">
+                          <div className="h-10 w-10 rounded-lg bg-muted overflow-hidden border border-muted flex-shrink-0">
                             {order.items[0]?.product.images?.[0] && (
                               <img src={order.items[0].product.images[0].url} className="h-full w-full object-cover" />
                             )}
@@ -90,18 +104,16 @@ export default async function BuyerDashboard() {
                       </td>
                       <td className="px-6 py-4 font-black">${order.total.toLocaleString()}</td>
                       <td className="px-6 py-4">
-                        <Badge variant="outline" className="font-black uppercase tracking-widest text-[9px] px-2 py-0.5 rounded-full border-muted-foreground/30">
-                          {order.status}
-                        </Badge>
+                        <StatusBadge status={order.status} />
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] text-emerald-600">
-                          <ShieldCheck size={14} /> {order.escrowStatus.replace("_", " ")}
-                        </div>
+                        <StatusBadge status={order.escrowStatus} />
                       </td>
                       <td className="px-6 py-4">
                         <Link href={`/dashboard/orders/${order.id}`}>
-                          <Button variant="outline" size="sm" className="font-bold text-[10px] uppercase rounded-lg border-2">Track</Button>
+                          <Button variant="outline" size="sm" className="font-bold text-[10px] uppercase rounded-lg border-2 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all">
+                            Track <ArrowRight size={12} className="ml-1" />
+                          </Button>
                         </Link>
                       </td>
                     </tr>
@@ -110,16 +122,14 @@ export default async function BuyerDashboard() {
               </table>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground/30">
-                <ShoppingBag size={32} />
-              </div>
-              <h3 className="font-bold">No orders yet</h3>
-              <p className="text-sm text-muted-foreground mt-1">When you buy products, they will appear here.</p>
-              <Link href="/marketplace" className="mt-6">
-                <Button size="sm" className="font-bold rounded-xl px-6">Explore Marketplace</Button>
-              </Link>
-            </div>
+            <EmptyState 
+              icon={ShoppingBag}
+              title="No orders yet"
+              description="When you buy products, they will appear here. Start exploring our secure marketplace."
+              actionLabel="Explore Marketplace"
+              actionHref="/marketplace"
+              className="border-none rounded-none py-24"
+            />
           )}
         </CardContent>
       </Card>
@@ -127,14 +137,35 @@ export default async function BuyerDashboard() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="border-none shadow-xl shadow-muted/50 rounded-3xl overflow-hidden bg-card">
           <CardHeader className="bg-muted/20">
-            <CardTitle className="text-sm font-black uppercase tracking-widest">Recommended for You</CardTitle>
+            <CardTitle className="text-sm font-black uppercase tracking-widest">Buyer Protection</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 pt-6">
-            <p className="text-sm text-muted-foreground font-medium italic">Personalized recommendations coming soon...</p>
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-sm">Escrow Secured</p>
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                  Your funds are held in a secure smart contract and only released when you confirm delivery.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-sm">Dispute System</p>
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                  Open a dispute within 14 days if the item doesn't match the description or never arrives.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-xl shadow-muted/50 bg-primary text-primary-foreground rounded-3xl overflow-hidden">
+        <Card className="border-none shadow-xl shadow-muted/50 bg-primary text-primary-foreground rounded-3xl overflow-hidden group">
           <CardHeader className="bg-black/10">
             <CardTitle className="text-sm font-black uppercase tracking-widest">Become a Seller</CardTitle>
           </CardHeader>
@@ -143,7 +174,9 @@ export default async function BuyerDashboard() {
               Start your decentralized business journey. List products globally and get paid in crypto instantly with TrustBay Escrow.
             </p>
             <Link href="/dashboard/seller/onboarding">
-              <Button variant="secondary" className="w-full font-black uppercase tracking-widest h-12 rounded-2xl shadow-xl shadow-black/10">Start Selling Now</Button>
+              <Button variant="secondary" className="w-full font-black uppercase tracking-widest h-12 rounded-2xl shadow-xl shadow-black/10 group-hover:scale-[1.02] transition-transform">
+                Start Selling Now
+              </Button>
             </Link>
           </CardContent>
         </Card>
@@ -151,3 +184,4 @@ export default async function BuyerDashboard() {
     </div>
   );
 }
+
