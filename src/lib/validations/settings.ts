@@ -4,7 +4,7 @@ export const profileSettingsSchema = z.object({
   displayName: z.string().min(2, "Display name must be at least 2 characters").max(50).optional().nullable(),
   username: z.string().min(3, "Username must be at least 3 characters").max(30).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores").optional().nullable(),
   bio: z.string().max(500, "Bio must be less than 500 characters").optional().nullable(),
-  avatarUrl: z.string().url("Please enter a valid URL").optional().nullable().or(z.literal("")),
+  avatarUrl: z.string().optional().nullable().or(z.literal("")), // Removed .url() to allow base64 and internal paths
 });
 
 export const notificationSettingsSchema = z.object({

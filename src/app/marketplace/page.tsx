@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { 
-  Search, 
   SlidersHorizontal, 
-  ChevronDown, 
   Star, 
   ShieldCheck, 
   Zap,
   ShoppingBag,
-  Filter,
-  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -18,8 +14,6 @@ import {
   CardHeader 
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { getMarketplaceProducts } from "@/actions/products";
 import { 
   Sheet, 
@@ -28,54 +22,25 @@ import {
   SheetTitle, 
   SheetTrigger 
 } from "@/components/ui/sheet";
+import { MarketplaceSearch } from "@/components/marketplace/marketplace-search";
+import { MarketplaceFilters } from "@/components/marketplace/marketplace-filters";
+import { MarketplaceSort } from "@/components/marketplace/marketplace-sort";
+import { EmptyState } from "@/components/shared/ux/empty-state";
 
-function MarketplaceFilters() {
-  return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h3 className="mb-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground flex items-center gap-2">
-          <Filter size={12} /> Categories
-        </h3>
-        <div className="flex flex-col gap-1">
-          {["All Categories", "Electronics", "Collectibles", "Fashion", "Real Estate", "Services"].map((cat) => (
-            <Button key={cat} variant="ghost" className="justify-start text-sm font-bold h-11 rounded-xl px-4 hover:bg-primary/5 hover:text-primary transition-all">
-              {cat}
-            </Button>
-          ))}
-        </div>
-      </div>
-      <Separator className="opacity-50" />
-      <div>
-        <h3 className="mb-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Payment Token</h3>
-        <div className="flex flex-wrap gap-2">
-          {["USDC", "ETH", "USDT"].map((token) => (
-            <Badge key={token} variant="outline" className="cursor-pointer px-4 py-2 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all border-2 border-muted font-bold text-xs">
-              {token}
-            </Badge>
-          ))}
-        </div>
-      </div>
-      <Separator className="opacity-50" />
-      <div>
-        <h3 className="mb-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Condition</h3>
-        <div className="flex flex-col gap-4 px-1">
-          {["New", "Like New", "Pre-owned", "Refurbished"].map((cond) => (
-            <div key={cond} className="flex items-center gap-3 text-sm font-bold group cursor-pointer">
-              <div className="h-5 w-5 rounded-md border-2 border-muted group-hover:border-primary transition-colors flex items-center justify-center">
-                <input type="checkbox" id={cond} className="sr-only peer" />
-                <div className="h-2.5 w-2.5 rounded-sm bg-primary opacity-0 peer-checked:opacity-100 transition-opacity" />
-              </div>
-              <label htmlFor={cond} className="cursor-pointer group-hover:text-primary transition-colors">{cond}</label>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+export default async function MarketplacePage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  const filters = {
+    search: searchParams.q as string,
+    category: searchParams.category as string,
+    token: searchParams.token as string,
+    condition: searchParams.condition as string,
+    sort: searchParams.sort as string,
+  };
 
-export default async function MarketplacePage() {
-  const products = await getMarketplaceProducts();
+  const products = await getMarketplaceProducts(filters);
 
   return (
     <div className="container mx-auto px-4 py-12 animate-in fade-in duration-700">
@@ -91,13 +56,7 @@ export default async function MarketplacePage() {
           </div>
           
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-80 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input
-                placeholder="Search products, sellers, or tokens..."
-                className="pl-12 h-14 rounded-2xl border-2 border-transparent bg-muted/30 focus:bg-background focus:border-primary transition-all font-bold text-base shadow-sm"
-              />
-            </div>
+            <MarketplaceSearch />
             
             {/* Mobile Filter Trigger */}
             <Sheet>
@@ -114,9 +73,6 @@ export default async function MarketplacePage() {
                 </SheetHeader>
                 <div className="p-8 overflow-y-auto max-h-[calc(100vh-120px)]">
                   <MarketplaceFilters />
-                  <div className="mt-10">
-                    <Button className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20">Apply Filters</Button>
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -154,9 +110,7 @@ export default async function MarketplacePage() {
               <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
                 Showing <span className="text-foreground">{products.length}</span> verified results
               </p>
-              <Button variant="ghost" size="sm" className="gap-2 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl hover:bg-primary/5 transition-all">
-                Sort: Featured <ChevronDown className="h-4 w-4" />
-              </Button>
+              <MarketplaceSort />
             </div>
 
             {products.length > 0 ? (
@@ -214,21 +168,14 @@ export default async function MarketplacePage() {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-32 px-4 text-center bg-muted/10 rounded-[3rem] border-2 border-dashed border-muted">
-                <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-[3rem] bg-muted text-muted-foreground/30 shadow-inner">
-                  <ShoppingBag size={64} strokeWidth={1} />
-                </div>
-                <h3 className="text-3xl font-black uppercase tracking-tighter mb-2">No products found</h3>
-                <p className="max-w-md text-muted-foreground text-lg font-medium leading-relaxed italic">
-                  The marketplace is quiet. Be the first to list a product in this category or adjust your filters!
-                </p>
-                <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                  <Link href="/dashboard/products/new">
-                    <Button className="h-16 px-10 font-black uppercase tracking-widest rounded-2xl shadow-2xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-all active:scale-95">List Your First Product</Button>
-                  </Link>
-                  <Button variant="outline" className="h-16 px-10 font-black uppercase tracking-widest rounded-2xl border-2 transition-all active:scale-95">Clear All Filters</Button>
-                </div>
-              </div>
+              <EmptyState 
+                icon={ShoppingBag}
+                title="No products found"
+                description="The marketplace is quiet. Try adjusting your filters or search query."
+                actionLabel="Clear All Filters"
+                actionHref="/marketplace"
+                className="border-none rounded-[3rem] py-32 shadow-xl shadow-muted/30"
+              />
             )}
 
             {products.length > 12 && (

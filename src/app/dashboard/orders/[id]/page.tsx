@@ -78,7 +78,9 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     role: "",
     action: "",
     description: "",
-    icon: <Clock size={20} />
+    icon: <Clock size={20} />,
+    color: "bg-primary text-primary-foreground",
+    borderColor: "border-primary/20"
   };
 
   if (order.status === "PAID") {
@@ -86,21 +88,54 @@ export default async function OrderDetailPage({ params }: { params: { id: string
       role: "SELLER",
       action: "Ship Order",
       description: "Buyer has paid. Please ship the item and provide tracking details.",
-      icon: <Truck size={20} />
+      icon: <Truck size={20} />,
+      color: "bg-primary text-primary-foreground",
+      borderColor: "border-primary/20"
     };
   } else if (order.status === "SHIPPED") {
     nextAction = {
       role: "BUYER",
       action: "Confirm Delivery",
       description: "Order is in transit. Confirm once you have received the package.",
-      icon: <Package size={20} />
+      icon: <Package size={20} />,
+      color: "bg-primary text-primary-foreground",
+      borderColor: "border-primary/20"
     };
   } else if (order.status === "DELIVERED") {
     nextAction = {
       role: "BUYER",
       action: "Release Funds",
       description: "Item delivered! Release funds from escrow if you're satisfied.",
-      icon: <CheckCircle2 size={20} />
+      icon: <CheckCircle2 size={20} />,
+      color: "bg-primary text-primary-foreground",
+      borderColor: "border-primary/20"
+    };
+  } else if (order.status === "COMPLETED") {
+    nextAction = {
+      role: "SYSTEM",
+      action: "Order Finalized",
+      description: "Transaction complete. Funds have been released to the seller.",
+      icon: <CheckCircle2 size={20} />,
+      color: "bg-emerald-500 text-white",
+      borderColor: "border-emerald-500/20"
+    };
+  } else if (order.status === "CANCELLED") {
+    nextAction = {
+      role: "SYSTEM",
+      action: "Order Cancelled",
+      description: "This order has been cancelled and is no longer active.",
+      icon: <X size={20} />,
+      color: "bg-destructive text-destructive-foreground",
+      borderColor: "border-destructive/20"
+    };
+  } else if (order.status === "DISPUTED") {
+    nextAction = {
+      role: "MODERATOR",
+      action: "Under Review",
+      description: "A dispute has been opened. Our team is reviewing the case.",
+      icon: <AlertCircle size={20} />,
+      color: "bg-amber-500 text-white",
+      borderColor: "border-amber-500/20"
     };
   }
 
@@ -129,17 +164,17 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         {nextAction.action && (
           <div className={cn(
             "flex items-center gap-4 px-6 py-4 rounded-2xl border-2 shadow-lg shadow-primary/5",
-            (role === nextAction.role) ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-muted/50 opacity-80"
+            (role === nextAction.role || nextAction.role === "SYSTEM" || nextAction.role === "MODERATOR") ? nextAction.borderColor : "bg-muted/30 border-muted/50 opacity-80"
           )}>
             <div className={cn(
               "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner",
-              (role === nextAction.role) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              (role === nextAction.role || nextAction.role === "SYSTEM" || nextAction.role === "MODERATOR") ? nextAction.color : "bg-muted text-muted-foreground"
             )}>
               {nextAction.icon}
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
-                Next Action: {nextAction.role}
+                {nextAction.role === "SYSTEM" ? "Status" : `Next Action: ${nextAction.role}`}
               </p>
               <p className="font-black text-sm uppercase tracking-tighter">{nextAction.action}</p>
             </div>

@@ -13,26 +13,31 @@ import { OrderStatus, EscrowStatus } from "@prisma/client";
 export async function createOrder(productId: string, quantity: number, shippingAddress: any) {
   const user = await requireUser();
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    include: { sellerProfile: true },
-  });
-
-  if (!product) {
-    throw new Error("Product not found.");
-  }
-
-  if (product.stock < quantity) {
-    throw new Error("Insufficient stock.");
-  }
-
-  const subtotal = product.price * quantity;
-  const platformFee = subtotal * 0.02; // 2% fee
-  const total = subtotal + platformFee;
-
-  // Create order in a transaction
+  // Create order in a transaction to ensure stock safety and atomicity
   const order = await prisma.$transaction(async (tx) => {
-    // 1. Create the order
+    // 1. Re-fetch product inside transaction to get latest stock and ensure it's still available
+    const product = await tx.product.findUnique({
+      where: { id: productId },
+      include: { sellerProfile: true },
+    });
+
+    if (!product) {
+      throw new Error("Product not found.");
+    }
+
+    if (product.status !== "PUBLISHED") {
+      throw new Error("This product is no longer available for purchase.");
+    }
+
+    if (product.stock < quantity) {
+      throw new Error(`Insufficient stock. Only ${product.stock} items remaining.`);
+    }
+
+    const subtotal = product.price * quantity;
+    const platformFee = subtotal * 0.02; // 2% fee
+    const total = subtotal + platformFee;
+
+    // 2. Create the order
     const newOrder = await tx.order.create({
       data: {
         buyerProfileId: user.id,
@@ -55,7 +60,7 @@ export async function createOrder(productId: string, quantity: number, shippingA
       },
     });
 
-    // 2. Update product stock
+    // 3. Update product stock (decrement)
     await tx.product.update({
       where: { id: product.id },
       data: {
@@ -180,6 +185,11 @@ export async function markOrderShipped(orderId: string, shipmentReference: strin
   if (!order) throw new Error("Order not found");
   if (order.sellerProfileId !== user.sellerProfile!.id) throw new Error("Unauthorized: Only the seller can mark this order as shipped");
   
+  // Idempotency Guard: If already shipped, return success early
+  if (order.status === "SHIPPED" || order.status === "DELIVERED" || order.status === "COMPLETED") {
+    return order;
+  }
+
   // Rule: Order must be PAID before it can be SHIPPED
   if (order.status !== "PAID") {
     throw new Error(`Invalid transition: Order must be PAID before shipping. Current status: ${order.status}`);
@@ -215,6 +225,11 @@ export async function confirmDelivery(orderId: string) {
   if (!order) throw new Error("Order not found");
   if (order.buyerProfileId !== user.id) throw new Error("Unauthorized: Only the buyer can confirm delivery");
   
+  // Idempotency Guard: If already delivered or completed, return early
+  if (order.status === "DELIVERED" || order.status === "COMPLETED") {
+    return order;
+  }
+
   // Rule: Order must be SHIPPED before delivery can be confirmed
   if (order.status !== "SHIPPED") {
     throw new Error(`Invalid transition: Order must be SHIPPED before confirming delivery. Current status: ${order.status}`);
@@ -248,6 +263,11 @@ export async function completeOrder(orderId: string) {
 
   if (!order) throw new Error("Order not found");
   
+  // Idempotency Guard: If already completed, return early
+  if (order.status === "COMPLETED") {
+    return order;
+  }
+
   // Rule: Only the buyer can finalize and release funds (or system timeout)
   if (order.buyerProfileId !== user.id) throw new Error("Unauthorized: Only the buyer can finalize the order and release funds");
 

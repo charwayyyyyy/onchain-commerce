@@ -153,17 +153,78 @@ export async function updateStock(productId: string, newStock: number) {
 }
 
 /**
- * Fetches all published products from the marketplace.
+ * Fetches published products from the marketplace with optional filtering and sorting.
  */
-export async function getMarketplaceProducts() {
+export async function getMarketplaceProducts(filters: {
+  search?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  token?: string;
+  condition?: string;
+  sort?: string;
+} = {}) {
+  const { search, category, minPrice, maxPrice, token, condition, sort } = filters;
+
+  const where: any = {
+    status: "PUBLISHED",
+    stock: { gt: 0 }, // Ensure only items in stock are shown
+  };
+
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: "insensitive" } },
+      { shortDescription: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  if (category && category !== "All Categories") {
+    where.category = { name: category };
+  }
+
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    where.price = {};
+    if (minPrice !== undefined) where.price.gte = minPrice;
+    if (maxPrice !== undefined) where.price.lte = maxPrice;
+  }
+
+  if (token) {
+    where.paymentToken = token;
+  }
+
+  if (condition) {
+    where.condition = condition;
+  }
+
+  let orderBy: any = { createdAt: "desc" };
+
+  if (sort) {
+    switch (sort) {
+      case "price_asc":
+        orderBy = { price: "asc" };
+        break;
+      case "price_desc":
+        orderBy = { price: "desc" };
+        break;
+      case "latest":
+        orderBy = { createdAt: "desc" };
+        break;
+      case "oldest":
+        orderBy = { createdAt: "asc" };
+        break;
+      // Add more sort options as needed
+    }
+  }
+
   return await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
+    where,
     include: {
       sellerProfile: true,
       category: true,
       images: true,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy,
   });
 }
 

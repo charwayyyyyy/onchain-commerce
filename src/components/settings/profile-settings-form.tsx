@@ -176,7 +176,10 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
               )}
             </div>
             <div className="space-y-3 md:col-span-2">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">Email Address (Managed by Clerk)</Label>
+              <div className="flex items-center justify-between px-1">
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Email Address</Label>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Managed by Clerk</Badge>
+              </div>
               <Input 
                 value={user.email} 
                 disabled 
