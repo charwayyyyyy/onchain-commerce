@@ -6,9 +6,8 @@ import { cache } from "react";
 /**
  * Gets the current user's profile from the database,
  * or creates it if it doesn't exist yet (syncing with Clerk).
- * Cached per request to prevent duplicate DB calls.
  */
-export const getOrCreateUser = cache(async () => {
+export async function getOrCreateUser() {
   const { userId } = await auth();
 
   if (!userId) {
@@ -52,14 +51,13 @@ export const getOrCreateUser = cache(async () => {
   }
 
   return userProfile;
-});
+}
 
 /**
  * Returns the current authenticated user's profile.
  * Does not create one if it doesn't exist.
- * Cached per request to prevent duplicate DB calls.
  */
-export const getCurrentUserProfile = cache(async () => {
+export async function getCurrentUserProfile() {
   const { userId } = await auth();
 
   if (!userId) {
@@ -72,7 +70,7 @@ export const getCurrentUserProfile = cache(async () => {
       sellerProfile: true,
     },
   });
-});
+}
 
 /**
  * Requires an authenticated user and returns their profile.
