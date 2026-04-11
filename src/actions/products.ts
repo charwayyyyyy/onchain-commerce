@@ -232,8 +232,12 @@ export async function getMarketplaceProducts(filters: {
  * Fetches a single product's details by its ID.
  */
 export async function getProductById(productId: string) {
-  return await prisma.product.findUnique({
-    where: { id: productId },
+  const product = await prisma.product.findUnique({
+    where: { 
+      id: productId,
+      // Ensure we don't return ARCHIVED or DRAFT products to public users
+      // Note: Sellers can see their own draft/archived products via a different query
+    },
     include: {
       sellerProfile: {
         include: {
@@ -249,6 +253,59 @@ export async function getProductById(productId: string) {
       },
     },
   });
+
+  // Additional security check: If product is not PUBLISHED, only the owner can see it
+  if (product && product.status !== "PUBLISHED") {
+    try {
+      const user = await requireUser();
+      if (product.sellerProfileId !== user.sellerProfile?.id) {
+        return null;
+      }
+    } catch (e) {
+      // Not logged in or not the owner
+      return null;
+    }
+  }
+
+  return product;
+}
+
+/**
+ * Fetches a single product's details by its slug.
+ */
+export async function getProductBySlug(slug: string) {
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    include: {
+      sellerProfile: {
+        include: {
+          userProfile: true,
+        },
+      },
+      category: true,
+      images: true,
+      reviews: {
+        include: {
+          buyerProfile: true,
+        },
+      },
+    },
+  });
+
+  // Additional security check: If product is not PUBLISHED, only the owner can see it
+  if (product && product.status !== "PUBLISHED") {
+    try {
+      const user = await requireUser();
+      if (product.sellerProfileId !== user.sellerProfile?.id) {
+        return null;
+      }
+    } catch (e) {
+      // Not logged in or not the owner
+      return null;
+    }
+  }
+
+  return product;
 }
 
 /**

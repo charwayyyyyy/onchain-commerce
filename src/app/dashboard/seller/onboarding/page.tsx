@@ -24,7 +24,8 @@ import {
   Store, 
   ArrowRight, 
   Loader2,
-  Info
+  Info,
+  AlertCircle
 } from "lucide-react";
 
 import { useRouter } from "next/navigation";

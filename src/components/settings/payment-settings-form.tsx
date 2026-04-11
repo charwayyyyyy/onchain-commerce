@@ -32,13 +32,21 @@ export function PaymentSettingsForm({ sellerProfile }: PaymentSettingsFormProps)
 
   async function onSubmit(values: PaymentSettingsValues) {
     setIsLoading(true);
+    const toastId = toast.loading("Saving payout settings...");
     try {
       const result = await updatePaymentSettings(values);
-      if (result.success) {
-        toast.success("Payment settings updated");
+      if (result.success && result.data) {
+        toast.success(result.message || "Payment settings updated", { id: toastId });
+        // Use verified data for form reset
+        form.reset({
+          payoutWalletAddress: result.data.payoutWalletAddress || "",
+          preferredPayoutNetwork: result.data.preferredPayoutNetwork || "POLYGON",
+        });
+      } else {
+        toast.error(result.error || "Failed to update payment settings", { id: toastId });
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to update payment settings");
+      toast.error("An unexpected error occurred", { id: toastId });
     } finally {
       setIsLoading(false);
     }

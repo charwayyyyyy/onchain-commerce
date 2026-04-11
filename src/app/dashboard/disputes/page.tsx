@@ -21,7 +21,7 @@ import { EmptyState } from "@/components/shared/ux/empty-state";
 export default async function DisputesPage() {
   const disputes = await getUserDisputes();
 
-  const activeClaims = disputes.filter(d => d.status === "OPEN" || d.status === "IN_REVIEW").length;
+  const activeClaims = disputes.filter(d => d.status === "OPEN" || d.status === "UNDER_REVIEW").length;
   const resolvedClaims = disputes.filter(d => d.status === "RESOLVED").length;
 
   return (

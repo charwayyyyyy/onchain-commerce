@@ -32,7 +32,7 @@ export default async function BuyerDashboard() {
 
   const activeOrders = orders.filter(o => o.status !== "COMPLETED" && o.status !== "CANCELLED");
   const actionsNeeded = orders.filter(o => o.status === "SHIPPED" || o.status === "DELIVERED");
-  const activeDisputes = disputes.filter(d => d.status === "OPEN" || d.status === "IN_REVIEW");
+  const activeDisputes = disputes.filter(d => d.status === "OPEN" || d.status === "UNDER_REVIEW");
 
   const stats = [
     { label: "Active Orders", value: activeOrders.length.toString(), icon: <Clock className="h-4 w-4" /> },
@@ -129,48 +129,79 @@ export default async function BuyerDashboard() {
           <Card className="border-none shadow-2xl shadow-muted/50 overflow-hidden rounded-[2.5rem]">
             <CardContent className="p-0">
               {activeOrders.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm min-w-[600px]">
-                    <thead className="border-b bg-muted/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      <tr>
-                        <th className="px-8 py-5">Order</th>
-                        <th className="px-8 py-5">Product</th>
-                        <th className="px-8 py-5">Status</th>
-                        <th className="px-8 py-5">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-muted/30">
-                      {activeOrders.slice(0, 5).map((order) => (
-                        <tr key={order.id} className="hover:bg-muted/10 transition-colors group">
-                          <td className="px-8 py-6">
-                            <div className="font-black text-sm uppercase tracking-tighter">#{order.id.slice(-8).toUpperCase()}</div>
-                            <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-4">
-                              <div className="h-12 w-12 rounded-xl bg-muted overflow-hidden border-2 border-background shadow-lg">
-                                {order.items[0]?.product.images?.[0] && (
-                                  <img src={order.items[0].product.images[0].url} className="h-full w-full object-cover" />
-                                )}
-                              </div>
-                              <div className="font-bold line-clamp-1 max-w-[200px]">{order.items[0]?.titleSnapshot}</div>
-                            </div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <StatusBadge status={order.status} />
-                          </td>
-                          <td className="px-8 py-6">
-                            <Link href={`/dashboard/orders/${order.id}`}>
-                              <Button variant="outline" size="sm" className="font-black text-[10px] uppercase rounded-xl border-2 hover:bg-primary hover:text-primary-foreground transition-all">
-                                Track <ArrowRight size={14} className="ml-1.5" />
-                              </Button>
-                            </Link>
-                          </td>
+                <>
+                  {/* Desktop Table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-left text-sm min-w-[600px]">
+                      <thead className="border-b bg-muted/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        <tr>
+                          <th className="px-8 py-5">Order</th>
+                          <th className="px-8 py-5">Product</th>
+                          <th className="px-8 py-5">Status</th>
+                          <th className="px-8 py-5">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-muted/30">
+                        {activeOrders.slice(0, 5).map((order) => (
+                          <tr key={order.id} className="hover:bg-muted/10 transition-colors group">
+                            <td className="px-8 py-6">
+                              <div className="font-black text-sm uppercase tracking-tighter">#{order.id.slice(-8).toUpperCase()}</div>
+                              <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-muted overflow-hidden border-2 border-background shadow-lg">
+                                  {order.items[0]?.product.images?.[0] && (
+                                    <img src={order.items[0].product.images[0].url} className="h-full w-full object-cover" />
+                                  )}
+                                </div>
+                                <div className="font-bold line-clamp-1 max-w-[200px]">{order.items[0]?.titleSnapshot}</div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <StatusBadge status={order.status} />
+                            </td>
+                            <td className="px-8 py-6">
+                              <Link href={`/dashboard/orders/${order.id}`}>
+                                <Button variant="outline" size="sm" className="font-black text-[10px] uppercase rounded-xl border-2 hover:bg-primary hover:text-primary-foreground transition-all">
+                                  Track <ArrowRight size={14} className="ml-1.5" />
+                                </Button>
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="grid gap-4 p-6 md:hidden">
+                    {activeOrders.slice(0, 5).map((order) => (
+                      <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
+                        <div className="p-6 rounded-[2rem] bg-muted/10 border-2 border-muted/20 hover:border-primary/30 hover:bg-primary/5 transition-all">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <div className="font-black text-sm uppercase tracking-tighter">#{order.id.slice(-8).toUpperCase()}</div>
+                              <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
+                            </div>
+                            <StatusBadge status={order.status} />
+                          </div>
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="h-14 w-14 rounded-2xl bg-muted overflow-hidden border-2 border-background shadow-lg shrink-0">
+                              {order.items[0]?.product.images?.[0] && (
+                                <img src={order.items[0].product.images[0].url} className="h-full w-full object-cover" />
+                              )}
+                            </div>
+                            <div className="font-bold line-clamp-2 text-sm leading-tight">{order.items[0]?.titleSnapshot}</div>
+                          </div>
+                          <Button className="w-full font-black text-[10px] uppercase rounded-xl h-12 shadow-lg shadow-primary/20">
+                            View Status <ArrowRight size={14} className="ml-1.5" />
+                          </Button>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </>
               ) : (
                 <EmptyState 
                   icon={ShoppingBag}

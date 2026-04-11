@@ -47,12 +47,20 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
     const toastId = toast.loading("Saving changes...");
     try {
       const result = await updateProfileSettings(values);
-      if (result.success) {
-        toast.success("Profile updated successfully", { id: toastId });
-        reset(values); // Reset dirty state with new values
+      if (result.success && result.data) {
+        toast.success(result.message || "Profile updated successfully", { id: toastId });
+        // Use the verified data from the server for the reset
+        reset({
+          displayName: result.data.displayName || "",
+          username: result.data.username || "",
+          bio: result.data.bio || "",
+          avatarUrl: result.data.avatarUrl || "",
+        });
+      } else {
+        toast.error(result.error || "Failed to update profile", { id: toastId });
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to update profile", { id: toastId });
+      toast.error("An unexpected error occurred", { id: toastId });
     } finally {
       setIsLoading(false);
     }

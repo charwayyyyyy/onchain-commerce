@@ -30,13 +30,21 @@ export function PreferenceSettingsForm({ user }: PreferenceSettingsFormProps) {
 
   async function onSubmit(values: PreferenceSettingsValues) {
     setIsLoading(true);
+    const toastId = toast.loading("Saving preferences...");
     try {
       const result = await updatePreferenceSettings(values);
-      if (result.success) {
-        toast.success("Preferences updated");
+      if (result.success && result.data) {
+        toast.success(result.message || "Preferences updated", { id: toastId });
+        // Use verified data for form reset
+        form.reset({
+          preferredLanguage: result.data.preferredLanguage || "en",
+          preferredCurrency: result.data.preferredCurrency || "USD",
+        });
+      } else {
+        toast.error(result.error || "Failed to update preferences", { id: toastId });
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to update preferences");
+      toast.error("An unexpected error occurred", { id: toastId });
     } finally {
       setIsLoading(false);
     }

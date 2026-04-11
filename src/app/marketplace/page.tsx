@@ -60,7 +60,7 @@ export default async function MarketplacePage({
             
             {/* Mobile Filter Trigger */}
             <Sheet>
-              <SheetTrigger asChild>
+              <SheetTrigger>
                 <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-2 lg:hidden shadow-sm hover:bg-primary/5 hover:text-primary active:scale-95 transition-all">
                   <SlidersHorizontal className="h-5 w-5" />
                 </Button>

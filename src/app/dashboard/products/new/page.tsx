@@ -33,9 +33,13 @@ import {
   ArrowRight, 
   Loader2,
   Box,
-  Truck
+  Truck,
+  AlertCircle,
+  Info
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 // Placeholder categories for MVP
 const CATEGORIES = [

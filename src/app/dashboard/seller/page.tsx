@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   ArrowRight,
   ExternalLink,
-  Info
+  Info,
+  Truck
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,11 +24,15 @@ import { getCurrentUserProfile } from "@/lib/auth";
 import { StatusBadge } from "@/components/shared/ux/status-badge";
 import { EmptyState } from "@/components/shared/ux/empty-state";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 export default async function SellerDashboard() {
-  const orders = await getSellerOrders();
-  const products = await getSellerProducts();
-  const user = await getCurrentUserProfile();
+  const [orders, products, user] = await Promise.all([
+    getSellerOrders(),
+    getSellerProducts(),
+    getCurrentUserProfile()
+  ]);
 
   const isSeller = !!user?.sellerProfile;
   const hasPayoutWallet = !!user?.sellerProfile?.payoutWalletAddress;
@@ -152,46 +157,77 @@ export default async function SellerDashboard() {
           <Card className="border-none shadow-2xl shadow-muted/50 overflow-hidden rounded-[2.5rem]">
             <CardContent className="p-0">
               {ordersNeedingAction.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm min-w-[600px]">
-                    <thead className="border-b bg-muted/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      <tr>
-                        <th className="px-8 py-5">Order</th>
-                        <th className="px-8 py-5">Product</th>
-                        <th className="px-8 py-5">Value</th>
-                        <th className="px-8 py-5">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-muted/30">
-                      {ordersNeedingAction.map((order) => (
-                        <tr key={order.id} className="hover:bg-muted/10 transition-colors group">
-                          <td className="px-8 py-6">
-                            <div className="font-black text-sm uppercase tracking-tighter">#{order.id.slice(-8).toUpperCase()}</div>
-                            <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
-                          </td>
-                          <td className="px-8 py-6">
-                            <div className="flex items-center gap-4">
-                              <div className="h-12 w-12 rounded-xl bg-muted overflow-hidden border-2 border-background shadow-lg">
-                                {order.items[0]?.product.images?.[0] && (
-                                  <img src={order.items[0].product.images[0].url} className="h-full w-full object-cover" />
-                                )}
-                              </div>
-                              <div className="font-bold line-clamp-1 max-w-[200px]">{order.items[0]?.titleSnapshot}</div>
-                            </div>
-                          </td>
-                          <td className="px-8 py-6 font-black text-lg text-primary">${order.total.toLocaleString()}</td>
-                          <td className="px-8 py-6">
-                            <Link href={`/dashboard/orders/${order.id}`}>
-                              <Button variant="outline" size="sm" className="font-black text-[10px] uppercase rounded-xl border-2 hover:bg-primary hover:text-primary-foreground transition-all">
-                                Ship Now <ArrowRight size={14} className="ml-1.5" />
-                              </Button>
-                            </Link>
-                          </td>
+                <>
+                  {/* Desktop Table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-left text-sm min-w-[600px]">
+                      <thead className="border-b bg-muted/20 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        <tr>
+                          <th className="px-8 py-5">Order</th>
+                          <th className="px-8 py-5">Product</th>
+                          <th className="px-8 py-5">Value</th>
+                          <th className="px-8 py-5">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-muted/30">
+                        {ordersNeedingAction.map((order) => (
+                          <tr key={order.id} className="hover:bg-muted/10 transition-colors group">
+                            <td className="px-8 py-6">
+                              <div className="font-black text-sm uppercase tracking-tighter">#{order.id.slice(-8).toUpperCase()}</div>
+                              <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-muted overflow-hidden border-2 border-background shadow-lg">
+                                  {order.items[0]?.product.images?.[0] && (
+                                    <img src={order.items[0].product.images[0].url} className="h-full w-full object-cover" />
+                                  )}
+                                </div>
+                                <div className="font-bold line-clamp-1 max-w-[200px]">{order.items[0]?.titleSnapshot}</div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6 font-black text-lg text-primary">${order.total.toLocaleString()}</td>
+                            <td className="px-8 py-6">
+                              <Link href={`/dashboard/orders/${order.id}`}>
+                                <Button variant="outline" size="sm" className="font-black text-[10px] uppercase rounded-xl border-2 hover:bg-primary hover:text-primary-foreground transition-all">
+                                  Ship Now <ArrowRight size={14} className="ml-1.5" />
+                                </Button>
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="grid gap-4 p-6 md:hidden">
+                    {ordersNeedingAction.map((order) => (
+                      <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
+                        <div className="p-6 rounded-[2rem] bg-muted/10 border-2 border-muted/20 hover:border-primary/30 hover:bg-primary/5 transition-all">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <div className="font-black text-sm uppercase tracking-tighter">#{order.id.slice(-8).toUpperCase()}</div>
+                              <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
+                            </div>
+                            <div className="font-black text-xl text-primary">${order.total.toLocaleString()}</div>
+                          </div>
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="h-14 w-14 rounded-2xl bg-muted overflow-hidden border-2 border-background shadow-lg shrink-0">
+                              {order.items[0]?.product.images?.[0] && (
+                                <img src={order.items[0].product.images[0].url} className="h-full w-full object-cover" />
+                              )}
+                            </div>
+                            <div className="font-bold line-clamp-2 text-sm leading-tight">{order.items[0]?.titleSnapshot}</div>
+                          </div>
+                          <Button className="w-full font-black text-[10px] uppercase rounded-xl h-12 shadow-lg shadow-primary/20">
+                            Ship Now <ArrowRight size={14} className="ml-1.5" />
+                          </Button>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </>
               ) : (
                 <EmptyState 
                   icon={Package}
@@ -248,8 +284,10 @@ export default async function SellerDashboard() {
               ) : (
                 <EmptyState 
                   icon={TrendingUp}
-                  title="No activity yet"
-                  description="Your sales and order updates will be listed here."
+                  title="No sales yet"
+                  description="List your first product to start selling on TrustBay."
+                  actionLabel="Create Listing"
+                  actionHref="/dashboard/products/new"
                   className="border-none rounded-none py-20"
                 />
               )}
@@ -257,76 +295,61 @@ export default async function SellerDashboard() {
           </Card>
         </div>
 
-        {/* Sidebar: Payouts & Inventory */}
+        {/* Sidebar */}
         <div className="space-y-8">
-          <Card className="border-none shadow-2xl shadow-emerald-500/10 bg-emerald-500/5 rounded-[2.5rem] overflow-hidden border-2 border-emerald-500/20">
-            <CardHeader className="bg-emerald-500/10 border-b border-emerald-500/10 px-8 py-8">
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-emerald-700 flex items-center gap-2">
-                <DollarSign size={16} /> Payout Readiness
+          <Card className="border-none shadow-2xl shadow-primary/10 bg-primary rounded-[2.5rem] overflow-hidden text-primary-foreground">
+            <CardHeader className="bg-black/10 px-8 py-8 border-b border-white/10">
+              <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                <ShieldCheck size={16} /> Seller Protection
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
-              <div className="p-5 rounded-2xl bg-background border-2 border-emerald-500/20 shadow-inner">
-                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Available for Payout</div>
-                <div className="text-4xl font-black tracking-tighter text-emerald-600">$0.00</div>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-muted-foreground uppercase tracking-widest">Wallet Status</span>
-                  {hasPayoutWallet ? (
-                    <Badge className="bg-emerald-500 text-white font-black uppercase tracking-widest text-[9px] rounded-full">Connected</Badge>
-                  ) : (
-                    <Badge variant="destructive" className="font-black uppercase tracking-widest text-[9px] rounded-full">Missing</Badge>
-                  )}
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                  <DollarSign size={20} />
                 </div>
-                {hasPayoutWallet && (
-                  <div className="font-mono text-[10px] p-3 bg-muted/50 rounded-xl truncate font-bold text-muted-foreground">
-                    {user?.sellerProfile?.payoutWalletAddress}
-                  </div>
-                )}
+                <div>
+                  <h4 className="font-black text-sm uppercase tracking-tighter">Escrow Security</h4>
+                  <p className="text-xs text-primary-foreground/70 font-medium mt-1">Funds are locked safely in escrow before you ship. No chargeback risk.</p>
+                </div>
               </div>
-
-              <Button 
-                className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 transition-all active:scale-95 disabled:grayscale disabled:opacity-50"
-                disabled={!hasPayoutWallet}
-              >
-                Withdraw Funds
-              </Button>
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                  <Star size={20} />
+                </div>
+                <div>
+                  <h4 className="font-black text-sm uppercase tracking-tighter">Trust Rating</h4>
+                  <p className="text-xs text-primary-foreground/70 font-medium mt-1">Your reputation is stored on-chain. Build trust with every sale.</p>
+                </div>
+              </div>
+              <Separator className="bg-white/10" />
+              <Link href="/dashboard/settings">
+                <Button className="w-full bg-white text-primary hover:bg-white/90 font-black uppercase tracking-widest h-12 rounded-xl shadow-xl">
+                  Payout Settings
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl shadow-muted/30 rounded-[2.5rem] overflow-hidden bg-card">
-            <CardHeader className="bg-muted/10 border-b border-muted/10 px-8 py-8">
-              <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                <Plus size={16} /> Quick Actions
-              </CardTitle>
+          <Card className="border-none shadow-xl shadow-muted/30 rounded-[2.5rem] overflow-hidden">
+            <CardHeader className="px-8 py-8 border-b border-muted/30">
+              <CardTitle className="text-sm font-black uppercase tracking-widest">Inventory Health</CardTitle>
             </CardHeader>
-            <CardContent className="p-8 grid grid-cols-2 gap-4">
-              <Link href="/dashboard/products" className="contents">
-                <Button variant="outline" className="h-28 flex flex-col gap-2 rounded-[2rem] border-2 border-dashed hover:border-primary hover:bg-primary/5 hover:text-primary transition-all group">
-                  <Package className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Listings</span>
-                </Button>
-              </Link>
-              <Link href="/dashboard/disputes" className="contents">
-                <Button variant="outline" className="h-28 flex flex-col gap-2 rounded-[2rem] border-2 border-dashed hover:border-primary hover:bg-primary/5 hover:text-primary transition-all group">
-                  <AlertCircle className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Claims</span>
-                </Button>
-              </Link>
-              <Link href="/dashboard/settings" className="contents">
-                <Button variant="outline" className="h-28 flex flex-col gap-2 rounded-[2rem] border-2 border-dashed hover:border-primary hover:bg-primary/5 hover:text-primary transition-all group">
-                  <User size={6} className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Settings</span>
-                </Button>
-              </Link>
-              <Link href="/marketplace" className="contents">
-                <Button variant="outline" className="h-28 flex flex-col gap-2 rounded-[2rem] border-2 border-dashed hover:border-primary hover:bg-primary/5 hover:text-primary transition-all group">
-                  <ShoppingBag className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Shop</span>
-                </Button>
-              </Link>
+            <CardContent className="p-8">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Out of Stock</span>
+                  <Badge variant="outline" className="font-black">{products.filter(p => p.stock === 0).length}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Active Listings</span>
+                  <Badge variant="outline" className="font-black">{products.filter(p => p.status === "PUBLISHED").length}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Drafts</span>
+                  <Badge variant="outline" className="font-black">{products.filter(p => p.status === "DRAFT").length}</Badge>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

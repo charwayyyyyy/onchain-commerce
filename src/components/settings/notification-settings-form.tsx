@@ -33,13 +33,24 @@ export function NotificationSettingsForm({ user }: NotificationSettingsFormProps
 
   async function onSubmit(values: NotificationSettingsValues) {
     setIsLoading(true);
+    const toastId = toast.loading("Saving preferences...");
     try {
       const result = await updateNotificationSettings(values);
-      if (result.success) {
-        toast.success("Notification preferences updated");
+      if (result.success && result.data) {
+        toast.success(result.message || "Notification preferences updated", { id: toastId });
+        // Use verified data for form reset
+        form.reset({
+          notificationOrderUpdates: result.data.notificationOrderUpdates,
+          notificationDisputeUpdates: result.data.notificationDisputeUpdates,
+          notificationSellerActivity: result.data.notificationSellerActivity,
+          notificationMarketing: result.data.notificationMarketing,
+          notificationSecurity: result.data.notificationSecurity,
+        });
+      } else {
+        toast.error(result.error || "Failed to update notifications", { id: toastId });
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to update notifications");
+      toast.error("An unexpected error occurred", { id: toastId });
     } finally {
       setIsLoading(false);
     }

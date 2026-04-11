@@ -1,12 +1,14 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "./prisma";
 import { UserRole } from "@prisma/client";
+import { cache } from "react";
 
 /**
  * Gets the current user's profile from the database,
  * or creates it if it doesn't exist yet (syncing with Clerk).
+ * Cached per request to prevent duplicate DB calls.
  */
-export async function getOrCreateUser() {
+export const getOrCreateUser = cache(async () => {
   const { userId } = await auth();
 
   if (!userId) {
@@ -50,13 +52,14 @@ export async function getOrCreateUser() {
   }
 
   return userProfile;
-}
+});
 
 /**
  * Returns the current authenticated user's profile.
  * Does not create one if it doesn't exist.
+ * Cached per request to prevent duplicate DB calls.
  */
-export async function getCurrentUserProfile() {
+export const getCurrentUserProfile = cache(async () => {
   const { userId } = await auth();
 
   if (!userId) {
@@ -69,7 +72,7 @@ export async function getCurrentUserProfile() {
       sellerProfile: true,
     },
   });
-}
+});
 
 /**
  * Requires an authenticated user and returns their profile.

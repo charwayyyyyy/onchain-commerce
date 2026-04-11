@@ -43,9 +43,9 @@ export function MarketplaceSort() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger>
         <Button variant="ghost" size="sm" className="gap-2 text-[10px] font-black uppercase tracking-[0.15em] rounded-xl hover:bg-primary/5 transition-all">
-          Sort: {currentSortLabel} <ChevronDown className="h-4 w-4" />
+          Sort: {currentSortLabel} <ChevronDown className="h-4 w-4" />   
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="rounded-2xl border-2 p-2 min-w-[180px]">

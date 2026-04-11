@@ -136,7 +136,7 @@ export default async function NewDisputePage({
         </form>
 
         <div className="p-8 rounded-[2.5rem] bg-muted/20 border-2 border-dashed border-muted text-center space-y-4">
-          <h4 className="font-black text-xs uppercase tracking-widest">Wait! Have you contacted the {role === "BUYER" ? "seller" : "buyer"}?</h4>
+          <h4 className="font-black text-xs uppercase tracking-widest">Wait! Have you contacted the {user.role === "BUYER" ? "seller" : "buyer"}?</h4>
           <p className="text-sm text-muted-foreground font-medium px-4">
             Most issues can be resolved faster by communicating directly. Try sending a message before opening a formal dispute.
           </p>

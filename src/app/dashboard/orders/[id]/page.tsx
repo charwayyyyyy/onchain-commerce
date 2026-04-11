@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
 import { 
   ShieldCheck, 
   Package, 
@@ -26,7 +28,9 @@ import {
   Store,
   Clock,
   ArrowRight,
-  Loader2
+  Loader2,
+  X,
+  Info
 } from "lucide-react";
 import Link from "next/link";
 import { 
