@@ -24,6 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { getMarketplaceProducts } from "@/actions/products";
 import { Star, ShoppingBag } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function LandingPage() {
   const products = await getMarketplaceProducts();
   const featuredProducts = products.slice(0, 4);

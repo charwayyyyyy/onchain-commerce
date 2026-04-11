@@ -5,11 +5,14 @@ import { PrismaClient } from "@prisma/client";
  * Explicitly handling DATABASE_URL from environment.
  */
 
-const databaseUrl = process.env.DATABASE_URL;
-
 const prismaClientSingleton = () => {
+  const databaseUrl = process.env.DATABASE_URL;
+
   if (!databaseUrl) {
-    throw new Error("CRITICAL: DATABASE_URL is not defined in environment variables.");
+    // If DATABASE_URL is missing, we don't throw immediately to avoid breaking build-time static analysis.
+    // Prisma will throw an error if a query is actually attempted.
+    console.warn("WARNING: DATABASE_URL is not defined in environment variables.");
+    return new PrismaClient();
   }
   
   return new PrismaClient({

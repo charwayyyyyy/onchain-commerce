@@ -27,6 +27,8 @@ import { MarketplaceFilters } from "@/components/marketplace/marketplace-filters
 import { MarketplaceSort } from "@/components/marketplace/marketplace-sort";
 import { EmptyState } from "@/components/shared/ux/empty-state";
 
+export const dynamic = "force-dynamic";
+
 export default async function MarketplacePage({
   searchParams,
 }: {
